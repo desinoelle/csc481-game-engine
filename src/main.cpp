@@ -39,16 +39,19 @@ int main ( int argc, char *argv[] ) {
     SDL_Event event;
 
     while (running) {
+        /** Not allowed
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {
                 running = false;
             }
-        }
+        }*/
 
         // Set Background color to white
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
         // Clear screen
         SDL_RenderClear(renderer);
+        // Update screen with new frame
+        SDL_RenderPresent(renderer);
     }
 
     SDL_DestroyRenderer(renderer);
