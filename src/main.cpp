@@ -2,6 +2,7 @@
 #include <SDL3/SDL_main.h>
 #include <SDL3_image/SDL_image.h>
 #include <cstdio>
+#include "input.hpp"
 
 const int WINDOW_WIDTH = 1920;  /*  Width of the game window to be created */
 const int WINDOW_HEIGHT = 1080; /*  Height of the game window to be created */
@@ -34,17 +35,42 @@ int main ( int argc, char *argv[] ) {
         return 1;
     }
 
+    InputSystem inputSystem;
+
     bool running = true;
 
     SDL_Event event;
 
     while (running) {
-        /** Not allowed
+        // Only use SDL_PollEvent for window close
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {
                 running = false;
             }
-        }*/
+        }
+
+        // Update input state
+        inputSystem.update();
+
+        if (inputSystem.isKeyPressed(SDL_SCANCODE_W)) {
+            SDL_Log("W pressed - move up");
+            // Todo
+        }
+
+        if (inputSystem.isKeyPressed(SDL_SCANCODE_A)) {
+            SDL_Log("A pressed - move left");
+            // Todo
+        }
+
+        if (inputSystem.isKeyPressed(SDL_SCANCODE_S)) {
+            SDL_Log("S pressed - move down");
+            // Todo
+        }
+
+        if(inputSystem.isKeyPressed(SDL_SCANCODE_D)) {
+            SDL_Log("D pressed - move right");
+            // Todo
+        }  
 
         // Set Background color to white
         SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
