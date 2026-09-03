@@ -2,27 +2,32 @@
 #define COOL_PHYSICS
 
 #include "coolMath.hpp"
+#include "entity.hpp"
 
 #include <vector>
 
-struct GlobalPosition {
-    Vector2 position;
-};
-
+/**
+    Collision struct for axis aligned boxes
+    Checkes collision based on min and max x and y between 2 boxes
+*/
 struct Collision {
     Vector2 TopLeft;
     Vector2 TopRight;
     Vector2 BottemLeft;
     Vector2 BottemRight;
 
-    /** 
-    bool checkOverlap( Collision other ) {
 
-    }*/
+    bool checkOverlap( Collision * other );
+
 };
 
+/**
+    Dynamic struct for physics based entities
+    Stores the entity, velocity, acceleration, force, and mass
+    Able to set mass and add force to dynamic entities
+*/
 struct Dynamic {
-    GlobalPosition position;
+    Entity entity;
     Vector2 velocity;
     Vector2 acceleration;
     Vector2 force;
@@ -31,11 +36,17 @@ struct Dynamic {
     float inverseMass;
     bool isStatic = false;
 
+
     void setMass( float m );
 
     void addForce( const Vector2& f );
 };
 
+/**
+    Physics struct for general physics
+    Has gravity variable and list of bodies 
+    Able to add bodies and update their physics
+*/
 class Physics {
     private:
         std::vector< Dynamic* > bodies;
@@ -44,7 +55,7 @@ class Physics {
     public:
         Physics();
 
-        void addBody( Dynamic* body );
+        void addBody( Dynamic * body );
         void setGravity( Vector2 g );
         void step( float deltaTime );
 };

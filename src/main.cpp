@@ -2,6 +2,7 @@
 #include <SDL3/SDL_main.h>
 #include <SDL3_image/SDL_image.h>
 #include <cstdio>
+#include <cmath>
 #include "input.hpp"
 
 const int WINDOW_WIDTH = 1920;  /*  Width of the game window to be created */
@@ -72,10 +73,18 @@ int main ( int argc, char *argv[] ) {
             // Todo
         }  
 
+
+
         // Set Background color to white
         SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
         // Clear screen
         SDL_RenderClear(renderer);
+
+        /**
+            Draw sprites and entites
+        */
+
+
         // Update screen with new frame
         SDL_RenderPresent(renderer);
     }
