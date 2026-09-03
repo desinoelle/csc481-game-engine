@@ -12,7 +12,7 @@ add_executable(coolEngine WIN32
     include/input.cpp
     include/entity.cpp
     include/coolMath.cpp
-    # include/coolPhysics.cpp
+    include/coolPhysics.cpp
     # include/sprite.cpp
 )
 

@@ -15,9 +15,10 @@ struct Collision {
     Vector2 BottemLeft;
     Vector2 BottemRight;
 
+    /** 
     bool checkOverlap( Collision other ) {
 
-    }
+    }*/
 };
 
 struct Dynamic {
@@ -30,15 +31,9 @@ struct Dynamic {
     float inverseMass;
     bool isStatic = false;
 
-    void setMass( float m ) {
-        mass = m;
-    }
+    void setMass( float m );
 
-    void addForce( const Vector2& f ) {
-        if ( !isStatic ) {
-            force += f;
-        }
-    }
+    void addForce( const Vector2& f );
 };
 
 class Physics {
