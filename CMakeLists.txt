@@ -13,7 +13,7 @@ add_executable(coolEngine WIN32
     include/entity.cpp
     include/coolMath.cpp
     include/coolPhysics.cpp
-    # include/sprite.cpp
+    include/sprite.cpp
 )
 
 target_include_directories(coolEngine PRIVATE include)

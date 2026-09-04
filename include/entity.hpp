@@ -1,20 +1,22 @@
-#ifndef ENTITY
-#define ENTITY
+#ifndef ENTITY_HPP
+#define ENTITY_HPP
 
 #include "sprite.hpp"
-#include "coolPhysics.hpp"
+#include "coolMath.hpp"
+#include <SDL3/SDL.h>
 
 struct Entity {
-    //Sprtite
-
     GlobalPosition position;
+    Sprite* sprite = nullptr;
 
     void updatePosition() {
-        //position.position
+        // Position is updated by Physics::step()
     }
 
-    void draw() {
-        //Check if sprite null and has position before render
+    void draw(SDL_Renderer* renderer) {
+        if (sprite != nullptr) {
+            sprite->draw(renderer, position.position.x, position.position.y);
+        }
     }
 };
 

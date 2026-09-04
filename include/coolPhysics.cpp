@@ -80,10 +80,12 @@ void Physics::step( float deltaTime ) {
 
         body->velocity += body->acceleration * deltaTime;
 
-        body->entity.position.position += body->velocity * deltaTime;
+        // Only update position if entity exists
+        if (body->entity != nullptr) {
+            body->entity->position.position += body->velocity * deltaTime;
+        }
 
         body->force = { 0.0f, 0.0f };
     }
 }
-
 
