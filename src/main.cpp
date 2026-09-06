@@ -45,6 +45,7 @@ int main ( int argc, char *argv[] ) {
     // ===== CREATE PLAYER =====
     Dynamic player;
     player.setMass(5.0f);
+    player.setFriction({0.2f, 1.0f});
     
     player.entity = new Entity();
     player.entity->sprite = new Sprite();
@@ -88,16 +89,16 @@ int main ( int argc, char *argv[] ) {
 
         // Apply forces based on input
         if (inputSystem.isKeyPressed(SDL_SCANCODE_W)) {
-            player.addForce({0.0f, -1500.0f});
+            player.addForce({0.0f, -150.0f});
         }
         if (inputSystem.isKeyPressed(SDL_SCANCODE_A)) {
-            player.addForce({-1500.0f, 0.0f});
+            player.addVelocity({-150.0f, 0.0f});
         }
         if (inputSystem.isKeyPressed(SDL_SCANCODE_S)) {
-            player.addForce({0.0f, 1500.0f});
+            player.addVelocity({0.0f, 150.0f});
         }
         if (inputSystem.isKeyPressed(SDL_SCANCODE_D)) {
-            player.addForce({1500.0f, 0.0f});
+            player.addVelocity({150.0f, 0.0f});
         }
 
         // Physics step
