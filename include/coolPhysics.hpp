@@ -20,6 +20,8 @@ struct Collision {
 
     bool checkOverlap( Collision * other );
 
+    void movePosition( const Vector2 p );
+
 };
 
 /**

@@ -28,6 +28,13 @@ bool Collision::checkOverlap( Collision * other ) {
     
 }
 
+void Collision::movePosition( const Vector2& p ) {
+    TopLeft += p;
+    TopRight += p;
+    BottemLeft += p;
+    BottemRight += p;
+}
+
 
 /**
     Sets mass for dynamic objects
