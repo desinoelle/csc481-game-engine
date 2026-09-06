@@ -28,7 +28,7 @@ bool Collision::checkOverlap( Collision * other ) {
     
 }
 
-void Collision::movePosition( const Vector2& p ) {
+void Collision::movePosition( const Vector2 p ) {
     TopLeft += p;
     TopRight += p;
     BottemLeft += p;
@@ -106,6 +106,9 @@ void Physics::step( float deltaTime ) {
         // Only update position if entity exists
         if (body->entity != nullptr) {
             body->entity->position.position += body->velocity * deltaTime;
+            if ( body->entity->hasCollision ) {
+                body->entity->Collision.movePosition( body->velocity * deltaTime );
+            }
         }
 
         body->velocity *= body->friction;

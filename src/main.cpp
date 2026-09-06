@@ -18,6 +18,7 @@ const int ANIMATION_DELAY = 100;
 const int TEST_RECT_WIDTH = 50;
 const int TEST_RECT_HEIGHT = 50;
 
+
 int main ( int argc, char *argv[] ) {
     // ===== INITIALIZATION =====
     
@@ -46,10 +47,18 @@ int main ( int argc, char *argv[] ) {
     Dynamic player;
     player.setMass(5.0f);
     player.setFriction({0.2f, 1.0f});
+
     
     player.entity = new Entity();
     player.entity->sprite = new Sprite();
-    
+
+    player.entity->hasCollision = true;
+    player.entity->Collision.BottemLeft = { 0.0f, 0.0f };
+    player.entity->Collision.TopRight = { 100.0f, 10.0f };
+    player.entity->Collision.TopLeft = { 0.0f, 100.0f };
+    player.entity->Collision.BottemRight = { 100.0f, 0.0f };
+
+
     bool spriteLoaded = player.entity->sprite->loadSprite(
         "assets/player.png",
         renderer,
@@ -72,8 +81,6 @@ int main ( int argc, char *argv[] ) {
 
     physics.addBody(&player);
 
-    Entity platform;
-    platform.sprite = new Sprite();
 
 
     // ===== GAME LOOP =====
@@ -109,6 +116,8 @@ int main ( int argc, char *argv[] ) {
         // Physics step
         physics.step(DELTA_TIME);
 
+
+
         // Ground collision
         if (player.entity->position.position.y > WINDOW_HEIGHT - TEST_RECT_HEIGHT) {
             player.entity->position.position.y = WINDOW_HEIGHT - TEST_RECT_HEIGHT;
@@ -129,6 +138,7 @@ int main ( int argc, char *argv[] ) {
         if (player.entity != nullptr && player.entity->sprite != nullptr) {
             player.entity->sprite->update();
         }
+
 
         // ===== RENDERING =====
         SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);

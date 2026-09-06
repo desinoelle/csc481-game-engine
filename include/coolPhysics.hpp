@@ -22,6 +22,7 @@ struct Collision {
 
     void movePosition( const Vector2 p );
 
+
 };
 
 /**
