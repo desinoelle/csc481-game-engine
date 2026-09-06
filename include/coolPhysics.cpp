@@ -48,6 +48,15 @@ void Dynamic::addForce( const Vector2& f ) {
 }
 
 /**
+    Adds velocity to dynamic objects and ignors static objects
+*/
+void Dynamic::addVelocity( const Vector2& v ) {
+    if ( !isStatic ) {
+        velocity += v;
+    }
+}
+
+/**
     Default gravity for physics
 */
 Physics::Physics() : gravity{ 0.0f, 9.81f } {}
@@ -67,6 +76,13 @@ void Physics::setGravity( Vector2 g ) {
 }
 
 /**
+    Sets physics friction
+*/
+void Dynamic::setFriction( const Vector2& f ) {
+    friction = f;
+}
+
+/**
     Updates all nonstatic phyiscs objects accelration, velocity, and position
     Also applies gravity to all physics objects
 */
@@ -77,13 +93,15 @@ void Physics::step( float deltaTime ) {
         }
 
         body->acceleration = ( body->force * body->inverseMass ) + gravity;
-
+        //printf("%lf \n", body->acceleration);
         body->velocity += body->acceleration * deltaTime;
 
         // Only update position if entity exists
         if (body->entity != nullptr) {
             body->entity->position.position += body->velocity * deltaTime;
         }
+
+        body->velocity *= body->friction;
 
         body->force = { 0.0f, 0.0f };
     }
