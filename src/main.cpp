@@ -41,7 +41,6 @@ int main ( int argc, char *argv[] ) {
 
     // ===== CREATE PHYSICS WORLD =====
     Physics physics;
-    physics.setGravity({0.0f, 980.0f});
 
     // ===== CREATE PLAYER =====
     Dynamic player;
@@ -80,7 +79,7 @@ int main ( int argc, char *argv[] ) {
     while (running) {
         // Handle quit
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_EVENT_QUIT) {
+            if (inputSystem.isKeyPressed(SDL_SCANCODE_ESCAPE)) {
                 running = false;
             }
         }
