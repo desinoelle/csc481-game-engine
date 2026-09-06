@@ -57,9 +57,9 @@ void Dynamic::addVelocity( const Vector2& v ) {
 }
 
 /**
-    Default gravity for physics
+    Default physics
 */
-Physics::Physics() : gravity{ 0.0f, 9.81f } {}
+Physics::Physics() {}
 
 /**
     Adds body to physics list of physics objects
@@ -71,8 +71,8 @@ void Physics::addBody( Dynamic* body ) {
 /**
     Sets phyiscs gravity
 */
-void Physics::setGravity( Vector2 g ) {
-    Physics::gravity = g;
+void Dynamic::setGravity( const Vector2& g ) {
+    gravity = g;
 }
 
 /**
@@ -92,7 +92,7 @@ void Physics::step( float deltaTime ) {
             continue;
         }
 
-        body->acceleration = ( body->force * body->inverseMass ) + gravity;
+        body->acceleration = ( body->force * body->inverseMass ) + body->gravity;
         //printf("%lf \n", body->acceleration);
         body->velocity += body->acceleration * deltaTime;
 

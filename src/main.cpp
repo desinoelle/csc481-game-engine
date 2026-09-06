@@ -61,6 +61,7 @@ int main ( int argc, char *argv[] ) {
     
     if (!spriteLoaded) {
         SDL_Log("Sprite not loaded. Will draw test rectangle.");
+        printf("WWW");
     }
 
     // Set starting position (centered on screen)
@@ -70,6 +71,10 @@ int main ( int argc, char *argv[] ) {
     };
 
     physics.addBody(&player);
+
+    Entity platform;
+    platform.sprite = new Sprite();
+
 
     // ===== GAME LOOP =====
     

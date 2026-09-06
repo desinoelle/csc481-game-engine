@@ -33,6 +33,7 @@ struct Dynamic {
     Vector2 acceleration;
     Vector2 force;
     Vector2 friction = { 1.0f, 1.0f };
+    Vector2 gravity = { 0.0f, 9.81f };
 
     float mass = 1.0f;
     float inverseMass;
@@ -46,6 +47,8 @@ struct Dynamic {
     void addVelocity( const Vector2& f);
 
     void setFriction( const Vector2& f );
+
+    void setGravity( const Vector2& g );
 };
 
 /**
@@ -56,14 +59,11 @@ struct Dynamic {
 class Physics {
     private:
         std::vector< Dynamic* > bodies;
-        Vector2 gravity = { 0.0f, 9.81f };
-        Vector2 friction;
 
     public:
         Physics();
 
         void addBody( Dynamic * body );
-        void setGravity( Vector2 g );
         void step( float deltaTime );
 
 };
