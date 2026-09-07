@@ -1,17 +1,5 @@
-# Individual game files
-src/main.cpp
-
-# Build artifacts
 build/
-*.o
-*.obj
-*.exe
-.cmake/
-CMakeFiles/
-CMakeCache.txt
-
-# IDE files
+.vs/
 .vscode/
-.idea/
-*.swp
-*.swo
+*.user
+cmake-build-*/
