@@ -17,11 +17,13 @@ const int ANIMATION_DELAY = 100;
 
 int main ( int argc, char *argv[] ) {
 
+    // Initializes sdl video
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
         return 1;
     }
 
+    // Initializes sdl window and renderer
     SDL_Window * window = nullptr;
     SDL_Renderer * renderer = nullptr;
     if (!SDL_CreateWindowAndRenderer("Cool engine", WINDOW_WIDTH, WINDOW_HEIGHT, 0, &window, &renderer)) {
@@ -35,15 +37,14 @@ int main ( int argc, char *argv[] ) {
     bool running = true;
     SDL_Event event;
 
-
-
-
-
+    /**
+     * Main loop of running the game
+     */
     while (running) {
 
         
 
-
+        // Clears screen to blue and draws and renders it
         SDL_SetRenderDrawColor( renderer, 0, 0, 255, 255 );
         SDL_RenderClear( renderer );
 
@@ -52,7 +53,7 @@ int main ( int argc, char *argv[] ) {
         SDL_RenderPresent( renderer );
     }
 
-
+    // Cleans up windows and renderer
     SDL_DestroyRenderer( renderer );
     SDL_DestroyWindow( window );
     SDL_Quit();
