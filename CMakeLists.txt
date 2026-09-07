@@ -7,7 +7,7 @@ find_package(SDL3 REQUIRED)
 find_package(SDL3_image REQUIRED)
 
 # Create your game executable target as usual
-add_executable(coolEngine WIN32 
+add_executable(coolEngine 
     src/main.cpp
     include/input.cpp
     include/entity.cpp
