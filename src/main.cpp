@@ -33,6 +33,7 @@ int main ( int argc, char *argv[] ) {
     }
     SDL_Log("Window created!");
 
+    InputSystem inputSystem;
 
     bool running = true;
     SDL_Event event;
@@ -42,11 +43,42 @@ int main ( int argc, char *argv[] ) {
      */
     while (running) {
 
+        SDL_PollEvent(&event);
+
+        inputSystem.update();
+        if ( inputSystem.isKeyPressed( SDL_SCANCODE_ESCAPE ) ) {
+            running = false;
+        }
+
+        //--Game Logic
+
+
+
+
+
+
+        
+
+
+
+        //--
         
 
         // Clears screen to blue and draws and renders it
         SDL_SetRenderDrawColor( renderer, 0, 0, 255, 255 );
         SDL_RenderClear( renderer );
+
+        //--Game Rendering
+       
+
+
+
+
+
+
+
+
+        //--
 
        
 
