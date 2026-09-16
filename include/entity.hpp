@@ -12,8 +12,8 @@ struct Entity {
     bool spriteLoaded = false;
     SDL_FRect defaultRectangle;
     int color[4] = { 0, 0, 0, 255 };
-    float rectangleWidth = 0.0f;
-    float rectangleHeight = 0.0f;
+    fp rectangleWidth = fp( 0.0f );
+    fp rectangleHeight = fp( 0.0f );
 
     Collision Collision;
 
@@ -26,30 +26,35 @@ struct Entity {
         color[3] = a;
     }
 
-    void setRectangleHeightAndWidth( float h, float w ) {
+    void setRectangleHeightAndWidth( fp h, fp w ) {
         rectangleHeight = h;
         rectangleWidth = w;
     }
 
 
-    void setCollisionBox(float halfWidth, float halfHeight) {
-        Vector2 center = position.position;
-        Collision.BottemLeft = { center.x - halfWidth, center.y - halfHeight };
-        Collision.TopRight = { center.x + halfWidth, center.y + halfHeight };
-        Collision.TopLeft = { center.x - halfWidth, center.y + halfHeight };
-        Collision.BottemRight = { center.x + halfWidth, center.y - halfHeight };
-        rectangleWidth = halfWidth * 2.0f;
-        rectangleHeight = halfHeight * 2.0f;
+    void setCollisionBox( fp halfWidth, fp halfHeight) {
+        fpVec2 center = position.position;
+        Collision.BottemLeft = fpVec2{ center.x - halfWidth, center.y - halfHeight };
+        Collision.TopRight = fpVec2{ center.x + halfWidth, center.y + halfHeight };
+        Collision.TopLeft = fpVec2{ center.x - halfWidth, center.y + halfHeight };
+        Collision.BottemRight = fpVec2{ center.x + halfWidth, center.y - halfHeight };
+        rectangleWidth = halfWidth * fp( 2.0f );
+        rectangleHeight = halfHeight * fp( 2.0f );
     }
 
     void draw(SDL_Renderer* renderer) {
-        if (sprite != nullptr && spriteLoaded ) {
-            sprite->draw(renderer, position.position.x, position.position.y);
+        float drawX = position.position.x.toFloat();
+        float drawY = position.position.y.toFloat();
+        float w = rectangleWidth.toFloat();
+        float h = rectangleHeight.toFloat();
+
+        if ( sprite != nullptr && spriteLoaded ) {
+            sprite->draw( renderer, drawX, drawY );
         } else {
-            defaultRectangle = { position.position.x - rectangleWidth / 2.0f, position.position.y - rectangleHeight / 2.0f, 
-                                 rectangleWidth, rectangleHeight};
-            SDL_SetRenderDrawColor( renderer, color[0], color[1], color[2], color[3] );
-            SDL_RenderFillRect( renderer, &defaultRectangle );
+            defaultRectangle = SDL_FRect{ drawX - ( w / 2.0f ), drawY - ( h / 2.0f ), w, h };
+            
+            SDL_SetRenderDrawColor(renderer, color[0], color[1], color[2], color[3]);
+            SDL_RenderFillRect(renderer, &defaultRectangle);
         }
     }
 };

@@ -9,15 +9,15 @@
     and returns a boolean
 */
 bool Collision::checkOverlap( Collision * other ) {
-    float firstBoxMaxX = this->TopRight.x;
-    float firstBoxMaxY = this->TopRight.y;
-    float firstBoxMinX = this->BottemLeft.x;
-    float firstBoxMinY = this->BottemLeft.y;
+    fp firstBoxMaxX = this->TopRight.x;
+    fp firstBoxMaxY = this->TopRight.y;
+    fp firstBoxMinX = this->BottemLeft.x;
+    fp firstBoxMinY = this->BottemLeft.y;
 
-    float secondBoxMaxX = other->TopRight.x;
-    float secondBoxMaxY = other->TopRight.y;
-    float secondBoxMinX = other->BottemLeft.x;
-    float secondBoxMinY = other->BottemLeft.y;
+    fp secondBoxMaxX = other->TopRight.x;
+    fp secondBoxMaxY = other->TopRight.y;
+    fp secondBoxMinX = other->BottemLeft.x;
+    fp secondBoxMinY = other->BottemLeft.y;
 
     return {
         firstBoxMinX <= secondBoxMaxX &&
@@ -28,7 +28,7 @@ bool Collision::checkOverlap( Collision * other ) {
     
 }
 
-void Collision::movePosition( const Vector2 p ) {
+void Collision::movePosition( const fpVec2 p ) {
     TopLeft += p;
     TopRight += p;
     BottemLeft += p;
@@ -40,15 +40,15 @@ void Collision::movePosition( const Vector2 p ) {
     Sets mass for dynamic objects
     also precomputes inverse mass for acceleration
 */
-void Dynamic::setMass( float m ) {
+void Dynamic::setMass( fp m ) {
     mass = m;
-    inverseMass = (m > 0.0f) ? 1.0f / m : 0.0f;
+    inverseMass = (m > fp( 0.0f ) ) ? fp( 1.0f ) / m : fp( 0.0f );
 }
 
 /**
     Adds force to dynamic objects and ignores static objects
 */
-void Dynamic::addForce( const Vector2& f ) {
+void Dynamic::addForce( const fpVec2& f ) {
     if ( !isStatic ) {
         force += f;
     }
@@ -57,7 +57,7 @@ void Dynamic::addForce( const Vector2& f ) {
 /**
     Adds velocity to dynamic objects and ignors static objects
 */
-void Dynamic::addVelocity( const Vector2& v ) {
+void Dynamic::addVelocity( const fpVec2& v ) {
     if ( !isStatic ) {
         velocity += v;
     }
@@ -78,14 +78,14 @@ void Physics::addBody( Dynamic* body ) {
 /**
     Sets phyiscs gravity
 */
-void Dynamic::setGravity( const Vector2& g ) {
+void Dynamic::setGravity( const fpVec2& g ) {
     gravity = g;
 }
 
 /**
     Sets physics friction
 */
-void Dynamic::setFriction( const Vector2& f ) {
+void Dynamic::setFriction( const fpVec2& f ) {
     friction = f;
 }
 
@@ -93,7 +93,7 @@ void Dynamic::setFriction( const Vector2& f ) {
     Updates all nonstatic phyiscs objects accelration, velocity, and position
     Also applies gravity to all physics objects
 */
-void Physics::step( float deltaTime ) {
+void Physics::step( fp deltaTime ) {
     for ( auto* body: bodies ) {
         if ( body->isStatic ) {
             continue;
@@ -113,7 +113,7 @@ void Physics::step( float deltaTime ) {
 
         body->velocity *= body->friction;
 
-        body->force = { 0.0f, 0.0f };
+        body->force = fpVec2{ 0.0f, 0.0f };
     }
 }
 
