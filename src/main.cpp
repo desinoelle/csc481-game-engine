@@ -17,7 +17,6 @@ const int ANIMATION_DELAY = 100;
 
 int main ( int argc, char *argv[] ) {
 
-    // Initializes sdl video
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
         return 1;
@@ -50,37 +49,9 @@ int main ( int argc, char *argv[] ) {
             running = false;
         }
 
-        //--Game Logic
-
-
-
-
-
-
-        
-
-
-
-        //--
-        
-
         // Clears screen to blue and draws and renders it
         SDL_SetRenderDrawColor( renderer, 0, 0, 255, 255 );
-        SDL_RenderClear( renderer );
-
-        //--Game Rendering
-       
-
-
-
-
-
-
-
-
-        //--
-
-       
+        SDL_RenderClear( renderer );      
 
         SDL_RenderPresent( renderer );
     }

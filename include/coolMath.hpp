@@ -66,14 +66,8 @@ class fp {
         }
 
         fp operator*( const fp& other ) const {
-            int64_t highBits;
-            
-            int64_t lowBits = _mul128( raw_value, other.raw_value, &highBits );
-            
-
-            int64_t result = ( lowBits >> 32 ) | (highBits << ( 32 ) );
-            
-            return fp( result, true );
+            __int128 product = static_cast< __int128 >( raw_value ) * other.raw_value;
+            return fp( static_cast< int64_t >( product >> FRACTIONAL_BITS ), true );
         }
 
         fp operator/( const fp& other ) const {

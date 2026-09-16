@@ -5,8 +5,10 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(SDL3 REQUIRED)
 find_package(SDL3_image REQUIRED)
+find_package(cppzmq REQUIRED)
 
-# Create your game executable target as usual
+find_package(Threads REQUIRED)
+
 add_executable(coolEngine 
     src/main.cpp
     include/input.cpp
@@ -14,11 +16,19 @@ add_executable(coolEngine
     include/coolMath.cpp
     include/coolPhysics.cpp
     include/sprite.cpp
+    include/evilNetworking.cpp
 )
 
 target_include_directories(coolEngine PRIVATE include)
 
-# Link to the actual SDL3 library.
-target_link_libraries(coolEngine PRIVATE SDL3::SDL3 SDL3_image::SDL3_image)
+target_link_libraries(coolEngine PRIVATE SDL3::SDL3 SDL3_image::SDL3_image cppzmq)
 
-target_include_directories(coolEngine PRIVATE C:/msys64/mingw64/include)
+add_executable(coolServer
+    src/server_main.cpp
+    include/coolMath.cpp
+    include/evilNetworking.cpp
+)
+
+target_include_directories(coolServer PRIVATE include)
+
+target_link_libraries(coolServer PRIVATE cppzmq Threads::Threads)
