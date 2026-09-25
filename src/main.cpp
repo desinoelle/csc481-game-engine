@@ -3,10 +3,14 @@
 #include <SDL3_image/SDL_image.h>
 #include <cstdio>
 #include <cmath>
+#include <thread>
+#include <vector>
 #include "input.hpp"
 #include "entity.hpp"
 #include "coolPhysics.hpp"
 #include "timeMagic.hpp"
+#include "niceSharedData.hpp"
+#include "niceJobSystem.hpp"
 
 const int WINDOW_WIDTH = 1920;
 const int WINDOW_HEIGHT = 1080;
@@ -36,8 +40,15 @@ int main ( int argc, char *argv[] ) {
     Timeline timeline;
     timeline.init();
 
+    // Initialize shared data
+    SharedData sharedData;
+    sharedData.inputSystem = &inputSystem;
+    sharedData.physics = &physics;
+    sharedData.timeline = &timeline;
+
     bool running = true;
     SDL_Event event;
+    const int numWorkerThreads = 2;
 
     while (running) {
         while (SDL_PollEvent(&event)) {
@@ -46,10 +57,34 @@ int main ( int argc, char *argv[] ) {
             }
         }
 
-        inputSystem.update();
-        float deltaTime = timeline.update();
+        // Prepare job queue for this frame
+        JobQueue jobQueue;
 
-        // Add pause control
+        // Job 1: Update input system
+        jobQueue.push_back([&sharedData]() {
+            sharedData.inputSystem->update();
+        });
+
+        // Job 2: Update timeline
+        jobQueue.push_back([&sharedData]() {
+            sharedData.timeline->update();
+        });
+
+        // Reset job index for this frame
+        sharedData.nextJobIndex = 0;
+
+        // Spawn worker threads to process jobs
+        std::vector<std::thread> threads;
+        for (int i = 0; i < numWorkerThreads; ++i) {
+            threads.emplace_back(worker, std::ref(sharedData), std::ref(jobQueue));
+        }
+
+        // Wait for all workers to finish
+        for (auto& t : threads) {
+            t.join();
+        }
+
+        // Handle pause control (main thread)
         if (inputSystem.isKeyPressed(SDL_SCANCODE_RETURN)) {
             if (timeline.isPaused()) {
                 timeline.setPause(false);
