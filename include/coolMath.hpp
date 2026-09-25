@@ -80,6 +80,11 @@ class fp {
             return *this;
         }
 
+        fp& operator-=( const fp& other ) {
+            raw_value -= other.raw_value;
+            return *this;
+        }
+
         fp& operator*=( const fp& other ) {
             *this = *this * other;
             return *this;
