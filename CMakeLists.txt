@@ -17,6 +17,7 @@ add_executable(coolEngine
     include/coolPhysics.cpp
     include/sprite.cpp
     include/evilNetworking.cpp
+    include/timeMagic.cpp
 )
 
 target_include_directories(coolEngine PRIVATE include)

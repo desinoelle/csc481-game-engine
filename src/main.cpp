@@ -6,6 +6,7 @@
 #include "input.hpp"
 #include "entity.hpp"
 #include "coolPhysics.hpp"
+#include "timeMagic.hpp"
 
 const int WINDOW_WIDTH = 1920;
 const int WINDOW_HEIGHT = 1080;
@@ -33,6 +34,8 @@ int main ( int argc, char *argv[] ) {
     SDL_Log("Window created!");
 
     InputSystem inputSystem;
+    Timeline timeline;
+    timeline.init();
 
     bool running = true;
     SDL_Event event;
@@ -45,8 +48,17 @@ int main ( int argc, char *argv[] ) {
         SDL_PollEvent(&event);
 
         inputSystem.update();
+        double deltaTime = timeline.update();
         if ( inputSystem.isKeyPressed( SDL_SCANCODE_ESCAPE ) ) {
             running = false;
+        } else if (inputSystem.isKeyPressed( SDL_SCANCODE_SPACE )) {
+            if (timeline.isPaused()) {
+                timeline.setPaused(true);
+                SDL_Log("Paused");
+            } else {
+                timeline.setPaused(false);
+                SDL_Log("Unpaused");
+            }
         }
 
         // Clears screen to blue and draws and renders it
