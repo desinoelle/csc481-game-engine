@@ -5,7 +5,7 @@ struct Timeline {
 private:
     double timeScale = 1.0;
     Uint64 lastTicks = 0;
-    double accumulated = 0.0;
+    float accumulated = 0.0;
 
     const double MAX_SPEED = 2.0;
     const double MIN_SPEED = 0.5;
@@ -15,7 +15,7 @@ private:
 public:
     void init();
 
-    double update();
+    float update();
 
     void setScale(double s);
 

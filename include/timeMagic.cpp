@@ -7,7 +7,7 @@ void Timeline::init() {
     lastTicks = SDL_GetTicks();
 };
 
-double Timeline::update() {
+float Timeline::update() {
     Uint64 now = SDL_GetTicks();
     double delta = (now - lastTicks) / 1000.0;
     lastTicks = now;

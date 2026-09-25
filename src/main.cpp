@@ -37,6 +37,8 @@ int main(int argc, char* argv[]) {
 
     InputSystem inputSystem;
     Physics physics;
+    Timeline timeline;
+    timeline.init();
 
     // ===== ENTITY 1: PLAYER (Controllable, affected by gravity) =====
     Dynamic player;
@@ -82,7 +84,7 @@ int main(int argc, char* argv[]) {
     
     bool running = true;
     SDL_Event event;
-    const float DELTA_TIME = 0.016f;  // ~60 FPS
+    //const float DELTA_TIME = 0.016f;  // ~60 FPS
     int frameCount = 0;
     bool spaceLastFrame = false;
     bool movingEnemyRight = true;
@@ -99,8 +101,18 @@ int main(int argc, char* argv[]) {
         }
 
         inputSystem.update();
+        float deltaTime = timeline.update();
 
-        // ----- TASK 4: INPUT HANDLING (A/D movement) -----
+        // ----- TASK 4: INPUT HANDLING (A/D movement + pause) -----
+        if (inputSystem.isKeyPressed(SDL_SCANCODE_ENTER)) {
+            if (timeline.isPaused()) {
+                timeline.setPaused(false);
+                SDL_LOG("Game unpaused!");
+            } else {
+                timeline.setPaused(true);
+                SDL_LOG("Game paused!");
+            }
+        }
         if (inputSystem.isKeyPressed(SDL_SCANCODE_A)) {
             player.addForce({-150.0f, 0.0f}); 
         }
@@ -109,7 +121,7 @@ int main(int argc, char* argv[]) {
         }
 
         // ----- TASK 3: PHYSICS STEP (gravity applied here) -----
-        physics.step(DELTA_TIME);
+        physics.step(deltaTime);
         
         // ----- JUMP (AFTER physics.step so velocity doesn't get overwritten) -----
         bool spaceNow = inputSystem.isKeyPressed(SDL_SCANCODE_SPACE);
@@ -122,12 +134,12 @@ int main(int argc, char* argv[]) {
         // ----- ENEMY AUTO-MOVEMENT (continuous patrol in small area) -----
         // Move enemy back and forth in a small zone near the right side of the screen
         if (movingEnemyRight) {
-            enemy.entity->position.position.x += 1.0f * DELTA_TIME;
+            enemy.entity->position.position.x += 1.0f * deltaTime;
             if (enemy.entity->position.position.x > 1400.0f) {
                 movingEnemyRight = false;
             }
         } else {
-            enemy.entity->position.position.x -= 1.0f * DELTA_TIME;  
+            enemy.entity->position.position.x -= 1.0f * deltaTime;  
             if (enemy.entity->position.position.x < 1200.0f) {
                 movingEnemyRight = true;
             }
