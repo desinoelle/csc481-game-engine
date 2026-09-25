@@ -5,6 +5,7 @@
 
 void Timeline::init() {
     lastTicks = SDL_GetTicks();
+    lastDelta = 0.0f;
 };
 
 float Timeline::update() {
@@ -12,11 +13,12 @@ float Timeline::update() {
     float delta = (now - lastTicks) / 1000.0f;
     lastTicks = now;
 
-    if (isPaused()) {
+    if ( paused ) {
+        lastDelta = 0.0f;
         return 0.0f;
     } else {
-        accumulated += delta * timeScale;
-        return accumulated;
+        lastDelta = delta * (float)timeScale;
+        return lastDelta;
     }
 };
 
