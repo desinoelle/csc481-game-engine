@@ -104,13 +104,13 @@ int main(int argc, char* argv[]) {
         float deltaTime = timeline.update();
 
         // ----- TASK 4: INPUT HANDLING (A/D movement + pause) -----
-        if (inputSystem.isKeyPressed(SDL_SCANCODE_ENTER)) {
+        if (inputSystem.isKeyPressed(SDL_SCANCODE_RETURN)) {
             if (timeline.isPaused()) {
-                timeline.setPaused(false);
-                SDL_LOG("Game unpaused!");
+                timeline.setPause(false);
+                SDL_Log("Game unpaused!");
             } else {
-                timeline.setPaused(true);
-                SDL_LOG("Game paused!");
+                timeline.setPause(true);
+                SDL_Log("Game paused!");
             }
         }
         if (inputSystem.isKeyPressed(SDL_SCANCODE_A)) {

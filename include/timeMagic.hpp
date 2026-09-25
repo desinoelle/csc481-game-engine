@@ -2,7 +2,7 @@
 #define TIME_MAGIC
 
 struct Timeline {
-private:
+protected:
     double timeScale = 1.0;
     Uint64 lastTicks = 0;
     float accumulated = 0.0;
@@ -10,7 +10,7 @@ private:
     const double MAX_SPEED = 2.0;
     const double MIN_SPEED = 0.5;
 
-    boolean paused = false;
+    bool paused = false;
 
 public:
     void init();
@@ -21,9 +21,9 @@ public:
 
     double getScale() const { return timeScale;};
 
-    void setPause(boolean pause) {paused = pause;};
+    void setPause(bool pause) {paused = pause;};
 
-    boolean isPaused() const {return paused;};
+    bool isPaused() const {return paused;};
 };
 
 #endif
