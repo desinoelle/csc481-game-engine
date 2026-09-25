@@ -94,6 +94,8 @@ void Dynamic::setFriction( const fpVec2& f ) {
     Also applies gravity to all physics objects
 */
 void Physics::step( fp deltaTime ) {
+    std::lock_guard<std::mutex> lock(bodiesMutex);
+    
     for ( auto* body: bodies ) {
         if ( body->isStatic ) {
             continue;

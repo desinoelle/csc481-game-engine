@@ -6,6 +6,7 @@
 struct Entity;
 
 #include <vector>
+#include <mutex>
 
 /**
     Collision struct for axis aligned boxes
@@ -62,12 +63,22 @@ struct Dynamic {
 class Physics {
     private:
         std::vector< Dynamic* > bodies;
+        std::mutex bodiesMutex;
 
     public:
         Physics();
 
         void addBody( Dynamic * body );
         void step( fp deltaTime );
+
+        // Thread-safe getters/setters
+        std::lock_guard<std::mutex> getBodiesMutexLock() {
+            return std::lock_guard<std::mutex>(bodiesMutex);
+        }
+
+        const std::vector<Dynamic*>& getBodies() const {
+            return bodies;
+        }
 
 };
 

@@ -3,3 +3,6 @@ build/
 .vscode/
 *.user
 cmake-build-*/
+
+#ignore personal games
+src/desiree_main.cpp
