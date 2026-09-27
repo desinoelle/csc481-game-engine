@@ -9,6 +9,7 @@
 #include "entity.hpp"
 #include "coolPhysics.hpp"
 #include "timeMagic.hpp"
+#include "evilNetworking.hpp"
 #include "niceSharedData.hpp"
 #include "niceJobSystem.hpp"
 
@@ -35,10 +36,28 @@ int main ( int argc, char *argv[] ) {
     }
     SDL_Log("Window created!");
 
+    // Get client ID from command line (default to 0)
+    int clientId = 0;
+    if (argc > 1) {
+        clientId = std::stoi(argv[1]);
+        SDL_Log("Client ID: %d", clientId);
+    }
+
     InputSystem inputSystem;
     Physics physics;
     Timeline timeline;
     timeline.init();
+
+    // Initialize networking with client ID
+    NetworkClient networkClient(clientId);
+    if (!networkClient.connectToServer("localhost")) {
+        SDL_Log("Failed to connect to server!");
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return 1;
+    }
+    SDL_Log("Connected to server with client ID %d", clientId);
 
     // Initialize shared data
     SharedData sharedData;
@@ -49,8 +68,11 @@ int main ( int argc, char *argv[] ) {
     bool running = true;
     SDL_Event event;
     const int numWorkerThreads = 2;
+    int frameCount = 0;
 
     while (running) {
+        frameCount++;
+
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {
                 running = false;
@@ -88,17 +110,46 @@ int main ( int argc, char *argv[] ) {
         if (inputSystem.isKeyPressed(SDL_SCANCODE_RETURN)) {
             if (timeline.isPaused()) {
                 timeline.setPause(false);
-                SDL_Log("Game unpaused!");
+                SDL_Log("[Client %d] Game unpaused!", clientId);
             } else {
                 timeline.setPause(true);
-                SDL_Log("Game paused!");
+                SDL_Log("[Client %d] Game paused!", clientId);
             }
         }
 
-        SDL_SetRenderDrawColor( renderer, 0, 0, 255, 255 );
-        SDL_RenderClear( renderer );
+        // Send this client's demo position to server
+        // (For demo: just send a fixed position based on clientId)
+        fpVec2 demoPosition = fpVec2(fp((float)WINDOW_WIDTH / 2.0f + clientId * 100.0f), fp((float)WINDOW_HEIGHT / 2.0f));
+        networkClient.sendPosition(demoPosition);
 
-        SDL_RenderPresent( renderer );
+        // Poll server for all clients' positions
+        networkClient.pollState();
+        const auto& players = networkClient.getPlayers();
+
+        // Clear screen
+        SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+        SDL_RenderClear(renderer);
+
+        // Draw all players' positions from server (all clients see same thing)
+        for (const auto& entry : players) {
+            SDL_FRect rect = {
+                (float)entry.second.x - 25.0f,
+                (float)entry.second.y - 25.0f,
+                50.0f,
+                50.0f
+            };
+            
+            // Draw this client's player in orange, others in red
+            if (entry.second.id == networkClient.getMyId()) {
+                SDL_SetRenderDrawColor(renderer, 255, 165, 0, 255);  // Orange
+            } else {
+                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);    // Red
+            }
+            
+            SDL_RenderFillRect(renderer, &rect);
+        }
+
+        SDL_RenderPresent(renderer);
     }
 
     SDL_DestroyRenderer( renderer );

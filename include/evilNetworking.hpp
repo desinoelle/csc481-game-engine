@@ -45,6 +45,7 @@ class NetworkClient {
 
     public:
         NetworkClient();
+        NetworkClient(int clientId);  // Constructor that takes client ID for async
         ~NetworkClient();
 
         bool connectToServer( const std::string& host );
@@ -56,6 +57,7 @@ class NetworkClient {
         void disconnect();
 
         int getId() const { return myId; }
+        int getMyId() const { return myId; }  // Alias for getId()
         fpVec2 getSpawn() const { return spawn; }
         const std::map< int, PlayerState >& getPlayers() const { return players; }
 };

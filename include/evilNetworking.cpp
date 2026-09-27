@@ -4,13 +4,34 @@
 #include <iostream>
 #include <sstream>
 
+const int CLIENT_PORT_BASE = 6000;  // Match the server's client thread port base
+
 /**
-    Creates both unconnected sockets
+    Creates both sockets and connects to the server on the client's unique port
 */
-NetworkClient::NetworkClient(): 
+NetworkClient::NetworkClient( int clientId ): 
       context( 1 ),
       requestSocket( context, zmq::socket_type::req ),
       subscribeSocket( context, zmq::socket_type::sub ) {
+
+        // Calculate unique port for this client (6000+)
+        int myPort = CLIENT_PORT_BASE + clientId;
+        std::string connectAddr = "tcp://localhost:" + std::to_string( myPort );
+        
+        requestSocket.set( zmq::sockopt::linger, 0 );
+        requestSocket.set( zmq::sockopt::rcvtimeo, 2000 );
+        requestSocket.connect( connectAddr );
+        
+        subscribeSocket.set( zmq::sockopt::linger, 0 );
+        subscribeSocket.connect( "tcp://localhost:" + std::to_string( PUB_PORT ) );
+        subscribeSocket.set( zmq::sockopt::subscribe, "STATE" );
+}
+
+NetworkClient::NetworkClient()
+    : context(1),
+      requestSocket(context, zmq::socket_type::req),
+      subscribeSocket(context, zmq::socket_type::sub) {
+    // Default constructor for backwards compatibility
 }
 
 NetworkClient::~NetworkClient() {
@@ -22,15 +43,6 @@ NetworkClient::~NetworkClient() {
     Returns false when the server is not up
 */
 bool NetworkClient::connectToServer( const std::string& host ) {
-    requestSocket.set( zmq::sockopt::linger, 0 );
-    // release recv
-    requestSocket.set( zmq::sockopt::rcvtimeo, 2000 );
-    requestSocket.connect( "tcp://" + host + ":" + std::to_string( REQ_PORT ) );
-
-    subscribeSocket.set( zmq::sockopt::linger, 0 );
-    subscribeSocket.connect( "tcp://" + host + ":" + std::to_string( PUB_PORT ) );
-    subscribeSocket.set( zmq::sockopt::subscribe, "STATE" );
-
     std::string join = "JOIN";
     requestSocket.send( zmq::message_t( join.begin(), join.end() ), zmq::send_flags::none );
 
