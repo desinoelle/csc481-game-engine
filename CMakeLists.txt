@@ -3,10 +3,12 @@ project(coolEngine)
 
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(SDL3 REQUIRED)
-find_package(SDL3_image REQUIRED)
-find_package(cppzmq REQUIRED)
+add_subdirectory(vendored/SDL)
 
+set(SDLIMAGE_VENDORED OFF CACHE BOOL "" FORCE)
+add_subdirectory(vendored/SDL_image)
+
+find_package(cppzmq REQUIRED)
 find_package(Threads REQUIRED)
 
 add_executable(coolEngine 
@@ -19,6 +21,7 @@ add_executable(coolEngine
     include/evilNetworking.cpp
     include/timeMagic.cpp
     include/niceJobSystem.cpp
+    include/saucyPeerToPeer.cpp
 )
 
 target_include_directories(coolEngine PRIVATE include)

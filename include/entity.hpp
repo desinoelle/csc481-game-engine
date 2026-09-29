@@ -15,7 +15,7 @@ struct Entity {
     fp rectangleWidth = fp( 0.0f );
     fp rectangleHeight = fp( 0.0f );
 
-    Collision Collision;
+    collision Collision;
 
     bool hasCollision = false;
 

@@ -8,7 +8,7 @@
     Check overlap function checks overlap between two axis aligned boxes
     and returns a boolean
 */
-bool Collision::checkOverlap( Collision * other ) {
+bool collision::checkOverlap( collision * other ) {
     fp firstBoxMaxX = this->TopRight.x;
     fp firstBoxMaxY = this->TopRight.y;
     fp firstBoxMinX = this->BottemLeft.x;
@@ -28,7 +28,7 @@ bool Collision::checkOverlap( Collision * other ) {
     
 }
 
-void Collision::movePosition( const fpVec2 p ) {
+void collision::movePosition( const fpVec2 p ) {
     TopLeft += p;
     TopRight += p;
     BottemLeft += p;

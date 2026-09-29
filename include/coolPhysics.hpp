@@ -12,14 +12,14 @@ struct Entity;
     Collision struct for axis aligned boxes
     Checkes collision based on min and max x and y between 2 boxes
 */
-struct Collision {
+struct collision {
     fpVec2 TopLeft;
     fpVec2 TopRight;
     fpVec2 BottemLeft;
     fpVec2 BottemRight;
 
 
-    bool checkOverlap( Collision * other );
+    bool checkOverlap( collision * other );
 
     void movePosition( const fpVec2 p );
 
