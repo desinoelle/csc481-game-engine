@@ -71,8 +71,11 @@ void clientThread(zmq::context_t& context, int clientId) {
                 int id = 0;
                 double x = 0.0;
                 double y = 0.0;
-                double clientTime = 0.0;  // Client's elapsed time (for async support)
-                in >> id >> x >> y >> clientTime;
+                double clientTime = 0.0;
+                
+                in >> id >> x >> y;   
+                bool haveMove = !in.fail();  
+                in >> clientTime;
 
                 if (!in.fail()) {
                     std::lock_guard<std::mutex> lock(playersLock);
