@@ -3,6 +3,10 @@ project(coolEngine)
 
 set(CMAKE_CXX_STANDARD 17)
 
+if(APPLE)
+    list(APPEND CMAKE_PREFIX_PATH /opt/homebrew /usr/local)
+endif()
+
 add_subdirectory(vendored/SDL)
 
 set(SDLIMAGE_VENDORED OFF CACHE BOOL "" FORCE)
@@ -26,7 +30,7 @@ add_executable(coolEngine
 
 target_include_directories(coolEngine PRIVATE include)
 
-target_link_libraries(coolEngine PRIVATE SDL3::SDL3 SDL3_image::SDL3_image cppzmq)
+target_link_libraries(coolEngine PRIVATE SDL3::SDL3 SDL3_image::SDL3_image cppzmq Threads::Threads)
 
 add_executable(coolServer
     src/server_main.cpp

@@ -1,6 +1,9 @@
 #ifndef COOLMATH
 #define COOLMATH
 
+#ifdef _WIN32
+#include <intrin.h>
+#endif
 #include <cstdint>
 #include <cmath>
 
