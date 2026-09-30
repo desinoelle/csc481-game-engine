@@ -77,7 +77,7 @@ void clientThread(zmq::context_t& context, int clientId) {
                 bool haveMove = !in.fail();  
                 in >> clientTime;
 
-                if (!in.fail()) {
+                if (haveMove) {
                     std::lock_guard<std::mutex> lock(playersLock);
                     if (players.count(id) > 0) {
                         players[id].x = x;
