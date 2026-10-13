@@ -4,10 +4,11 @@
 #include "sprite.hpp"
 #include "coolMath.hpp"
 #include "coolPhysics.hpp"
+#include "sillyPropertyTypes.hpp"
 #include <SDL3/SDL.h>
+#include <string>
 
 struct Entity {
-    GlobalPosition position;
     Sprite* sprite = nullptr;
     bool spriteLoaded = false;
     SDL_FRect defaultRectangle;
@@ -15,9 +16,18 @@ struct Entity {
     fp rectangleWidth = fp( 0.0f );
     fp rectangleHeight = fp( 0.0f );
 
-    collision Collision;
+    collision& box() { return GetProperty<collision>( "collision", id ); }
 
-    bool hasCollision = false;
+    std::string id;
+
+    fpVec2& position() { return GetProperty<fpVec2>( "position", id ); }
+    const fpVec2& position() const { return GetProperty<fpVec2>( "position", id ); }
+
+    Entity( ) {
+        static int counter = 0;
+        id = "entity_" + std::to_string( counter++ );
+        SetProperty( "position", id, fpVec2() );
+    }
 
     void setColor( int r, int g, int b, int a ) {
         color[0] = r;
@@ -33,18 +43,20 @@ struct Entity {
 
 
     void setCollisionBox( fp halfWidth, fp halfHeight) {
-        fpVec2 center = position.position;
-        Collision.BottemLeft = fpVec2{ center.x - halfWidth, center.y - halfHeight };
-        Collision.TopRight = fpVec2{ center.x + halfWidth, center.y + halfHeight };
-        Collision.TopLeft = fpVec2{ center.x - halfWidth, center.y + halfHeight };
-        Collision.BottemRight = fpVec2{ center.x + halfWidth, center.y - halfHeight };
+        fpVec2 center = position();
+        collision c;
+        c.BottemLeft = fpVec2{ center.x - halfWidth, center.y - halfHeight };
+        c.TopRight = fpVec2{ center.x + halfWidth, center.y + halfHeight };
+        c.TopLeft = fpVec2{ center.x - halfWidth, center.y + halfHeight };
+        c.BottemRight = fpVec2{ center.x + halfWidth, center.y - halfHeight };
+        SetProperty( "collision", id, c );
         rectangleWidth = halfWidth * fp( 2.0f );
         rectangleHeight = halfHeight * fp( 2.0f );
     }
 
     void draw(SDL_Renderer* renderer) {
-        float drawX = position.position.x.toFloat();
-        float drawY = position.position.y.toFloat();
+        float drawX = position().x.toFloat();
+        float drawY = position().y.toFloat();
         float w = rectangleWidth.toFloat();
         float h = rectangleHeight.toFloat();
 

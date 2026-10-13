@@ -107,9 +107,9 @@ void Physics::step( fp deltaTime ) {
 
         // Only update position if entity exists
         if (body->entity != nullptr) {
-            body->entity->position.position += body->velocity * deltaTime;
-            if ( body->entity->hasCollision ) {
-                body->entity->Collision.movePosition( body->velocity * deltaTime );
+            body->entity->position() += body->velocity * deltaTime;
+            if ( Properties().has( "collision", body->entity->id ) ) {
+                body->entity->box().movePosition( body->velocity * deltaTime );
             }
         }
 

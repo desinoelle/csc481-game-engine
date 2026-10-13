@@ -8,12 +8,16 @@
 #include <variant>
 #include <vector>
 #include "coolMath.hpp"
+#include "coolPhysics.hpp"
 
 
 using PropertyValue = std::variant<
     int,
     float,
+    bool,
     fp,
+    fpVec2,
+    collision,
     SDL_FRect,
     SDL_Color,
     std::function<void(const std::string&)>,

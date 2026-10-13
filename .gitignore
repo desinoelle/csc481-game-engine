@@ -5,7 +5,7 @@ build/
 cmake-build-*/
 
 #ignore personal games
-src/desiree_main.cpp
+src/desiree_*.cpp
 src/monica_main.cpp
 # macOS Finder metadata
 .DS_Store
