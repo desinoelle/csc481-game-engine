@@ -10,6 +10,11 @@
 #include "coolMath.hpp"
 #include "coolPhysics.hpp"
 
+// Property names
+const std::string PROP_POSITION = "position";     
+const std::string PROP_NET_ID = "netId";          
+const std::string PROP_LAST_SEEN = "lastSeen";    
+const std::string PROP_MOVEABLE = "moveable";     
 
 using PropertyValue = std::variant<
     int,

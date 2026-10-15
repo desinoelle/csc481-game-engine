@@ -40,7 +40,7 @@ add_executable(coolServer
 
 target_include_directories(coolServer PRIVATE include)
 
-target_link_libraries(coolServer PRIVATE cppzmq Threads::Threads)
+target_link_libraries(coolServer PRIVATE SDL3::SDL3 cppzmq Threads::Threads)
 
 # only build personal games when the file is present
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/src/monica_main.cpp)
@@ -64,25 +64,29 @@ endif()
 
 # ---- Coin Rush (Desiree's individual game) ----
 
-add_executable(rushGame
-    src/desiree_rush_main.cpp
-    include/input.cpp
-    include/entity.cpp
-    include/coolMath.cpp
-    include/coolPhysics.cpp
-    include/sprite.cpp
-    include/evilNetworking.cpp
-    include/timeMagic.cpp
-    include/niceJobSystem.cpp
-    include/saucyPeerToPeer.cpp
-)
-target_include_directories(rushGame PRIVATE include)
-target_link_libraries(rushGame PRIVATE SDL3::SDL3 SDL3_image::SDL3_image cppzmq Threads::Threads)
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/src/desiree_rush_main.cpp)
+    add_executable(rushGame
+        src/desiree_rush_main.cpp
+        include/input.cpp
+        include/entity.cpp
+        include/coolMath.cpp
+        include/coolPhysics.cpp
+        include/sprite.cpp
+        include/evilNetworking.cpp
+        include/timeMagic.cpp
+        include/niceJobSystem.cpp
+        include/saucyPeerToPeer.cpp
+    )
+    target_include_directories(rushGame PRIVATE include)
+    target_link_libraries(rushGame PRIVATE SDL3::SDL3 SDL3_image::SDL3_image cppzmq Threads::Threads)
+endif()
 
-add_executable(rushServer
-    src/desiree_rush_server.cpp
-    include/coolMath.cpp
-    include/evilNetworking.cpp
-)
-target_include_directories(rushServer PRIVATE include)
-target_link_libraries(rushServer PRIVATE cppzmq Threads::Threads)
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/src/desiree_rush_server.cpp)
+    add_executable(rushServer
+        src/desiree_rush_server.cpp
+        include/coolMath.cpp
+        include/evilNetworking.cpp
+    )
+    target_include_directories(rushServer PRIVATE include)
+    target_link_libraries(rushServer PRIVATE cppzmq Threads::Threads)
+endif()

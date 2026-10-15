@@ -4,8 +4,6 @@
 #include <iostream>
 #include <sstream>
 
-const int CLIENT_PORT_BASE = 6000;  // Match the server's client thread port base
-
 /**
     Creates both sockets and connects to the server on the client's unique port
 */
@@ -27,11 +25,14 @@ NetworkClient::NetworkClient( int clientId ):
         subscribeSocket.set( zmq::sockopt::subscribe, "STATE" );
 }
 
+/**
+    Creates both sockets, connectToServer connects them through the lobby
+*/
 NetworkClient::NetworkClient()
     : context(1),
       requestSocket(context, zmq::socket_type::req),
-      subscribeSocket(context, zmq::socket_type::sub) {
-    // Default constructor for backwards compatibility
+      subscribeSocket(context, zmq::socket_type::sub),
+      usesLobby(true) {
 }
 
 NetworkClient::~NetworkClient() {
@@ -40,9 +41,20 @@ NetworkClient::~NetworkClient() {
 
 /**
     Sends JOIN and stores the id and spawn point the server sends back
+    The reply also names this client's server port through the lobby
     Returns false when the server is not up
 */
 bool NetworkClient::connectToServer( const std::string& host ) {
+    if ( usesLobby ) {
+        requestSocket.set( zmq::sockopt::linger, 0 );
+        requestSocket.set( zmq::sockopt::rcvtimeo, 2000 );
+        requestSocket.connect( "tcp://" + host + ":" + std::to_string( REQ_PORT ) );
+
+        subscribeSocket.set( zmq::sockopt::linger, 0 );
+        subscribeSocket.connect( "tcp://" + host + ":" + std::to_string( PUB_PORT ) );
+        subscribeSocket.set( zmq::sockopt::subscribe, "STATE" );
+    }
+
     std::string join = "JOIN";
     requestSocket.send( zmq::message_t( join.begin(), join.end() ), zmq::send_flags::none );
 
@@ -52,17 +64,29 @@ bool NetworkClient::connectToServer( const std::string& host ) {
         return false;
     }
 
-    // ID <id> <x> <y>
+    // ID <id> <x> <y> <port>
     std::string replyText( static_cast< char* >( reply.data() ), reply.size() );
     std::istringstream in( replyText );
     std::string tag;
     double x = 0.0;
     double y = 0.0;
+    int port = 0;
     in >> tag >> myId >> x >> y;
+    if ( usesLobby ) {
+        in >> port;
+    }
 
     if ( tag != "ID" || in.fail() ) {
         std::cerr << "Could not read the server reply: " << replyText << std::endl;
         return false;
+    }
+
+    if ( usesLobby ) {
+        requestSocket.close();
+        requestSocket = zmq::socket_t( context, zmq::socket_type::req );
+        requestSocket.set( zmq::sockopt::linger, 0 );
+        requestSocket.set( zmq::sockopt::rcvtimeo, 2000 );
+        requestSocket.connect( "tcp://" + host + ":" + std::to_string( port ) );
     }
 
     spawn = fpVec2{ fp( x ), fp( y ) };

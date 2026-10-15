@@ -6,16 +6,17 @@
 #include <map>
 #include <string>
 
-const int REQ_PORT = 5555;
+const int REQ_PORT = 5555;            
 const int PUB_PORT = 5556;
+const int CLIENT_PORT_BASE = 6000;    // per client server threads
 
 /**
     Messages passed between the client and the server
-        client to server        "JOIN"
-                                "MOVE <id> <x> <y>"
+        client to lobby         "JOIN"
+        lobby to one client     "ID <id> <x> <y> <port>"
+        client to server        "MOVE <id> <x> <y>"
                                 "LEAVE <id>"
-        server to one client    "ID <id> <x> <y>"
-                                "OK"
+        server to one client    "OK"
         server to everyone      "STATE <count> <id> <x> <y> etc"
 */
 
@@ -40,12 +41,13 @@ class NetworkClient {
 
         int myId = -1;
         bool connected = false;
+        bool usesLobby = false;
         fpVec2 spawn;
         std::map< int, PlayerState > players;
 
     public:
-        NetworkClient();
-        NetworkClient(int clientId);  // Constructor that takes client ID for async
+        NetworkClient();             
+        NetworkClient(int clientId);  // Fixed slot on CLIENT_PORT_BASE + id
         ~NetworkClient();
 
         bool connectToServer( const std::string& host );
@@ -58,6 +60,7 @@ class NetworkClient {
 
         int getId() const { return myId; }
         int getMyId() const { return myId; }  // Alias for getId()
+        bool isConnected() const { return connected; }
         fpVec2 getSpawn() const { return spawn; }
         const std::map< int, PlayerState >& getPlayers() const { return players; }
 };
