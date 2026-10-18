@@ -79,7 +79,7 @@ struct Actor {
         body.setMass( fp( 1.0f ) );
         body.setGravity( fpVec2( fp( 0.0f ), fp( 1500.0f ) ) );
         body.setFriction( fpVec2( fp( 1.0f ), fp( 1.0f ) ) );
-        body.entity = &entity;
+        body.entityId = entity.id;
         physics.addBody( &body );
     }
 };

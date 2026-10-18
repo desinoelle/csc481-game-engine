@@ -12,9 +12,6 @@ struct Entity {
     Sprite* sprite = nullptr;
     bool spriteLoaded = false;
     SDL_FRect defaultRectangle;
-    int color[4] = { 0, 0, 0, 255 };
-    fp rectangleWidth = fp( 0.0f );
-    fp rectangleHeight = fp( 0.0f );
 
     collision& box() { return GetProperty<collision>( "collision", id ); }
 
@@ -30,15 +27,16 @@ struct Entity {
     }
 
     void setColor( int r, int g, int b, int a ) {
-        color[0] = r;
-        color[1] = g;
-        color[2] = b;
-        color[3] = a;
+        SDL_Color c;
+        c.r = r;
+        c.g = g;
+        c.b = b;
+        c.a = a;
+        SetProperty( "color", id, c );
     }
 
     void setRectangleHeightAndWidth( fp h, fp w ) {
-        rectangleHeight = h;
-        rectangleWidth = w;
+        SetProperty( "size", id, fpVec2( w, h ) );
     }
 
 
@@ -50,22 +48,31 @@ struct Entity {
         c.TopLeft = fpVec2{ center.x - halfWidth, center.y + halfHeight };
         c.BottemRight = fpVec2{ center.x + halfWidth, center.y - halfHeight };
         SetProperty( "collision", id, c );
-        rectangleWidth = halfWidth * fp( 2.0f );
-        rectangleHeight = halfHeight * fp( 2.0f );
+        SetProperty( "size", id, fpVec2( halfWidth * fp( 2.0f ), halfHeight * fp( 2.0f ) ) );
     }
 
     void draw(SDL_Renderer* renderer) {
         float drawX = position().x.toFloat();
         float drawY = position().y.toFloat();
-        float w = rectangleWidth.toFloat();
-        float h = rectangleHeight.toFloat();
+        float w = 0.0f;
+        float h = 0.0f;
+        if ( Properties().has( "size", id ) ) {
+            fpVec2 size = GetProperty<fpVec2>( "size", id );
+            w = size.x.toFloat();
+            h = size.y.toFloat();
+        }
 
         if ( sprite != nullptr && spriteLoaded ) {
             sprite->draw( renderer, drawX, drawY );
         } else {
             defaultRectangle = SDL_FRect{ drawX - ( w / 2.0f ), drawY - ( h / 2.0f ), w, h };
+
+            SDL_Color c = { 0, 0, 0, 255 };
+            if( Properties().has( "color", id ) ) {
+                c = GetProperty<SDL_Color>( "color", id );
+            }
             
-            SDL_SetRenderDrawColor(renderer, color[0], color[1], color[2], color[3]);
+            SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a );
             SDL_RenderFillRect(renderer, &defaultRectangle);
         }
     }

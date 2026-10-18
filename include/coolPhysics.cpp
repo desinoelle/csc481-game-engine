@@ -1,6 +1,6 @@
 #include "coolPhysics.hpp"
 #include "entity.hpp"
-
+#include "sillyPropertyTypes.hpp"
 #include <algorithm>
 #include <vector>
 
@@ -106,10 +106,10 @@ void Physics::step( fp deltaTime ) {
         body->velocity += body->acceleration * deltaTime;
 
         // Only update position if entity exists
-        if (body->entity != nullptr) {
-            body->entity->position() += body->velocity * deltaTime;
-            if ( Properties().has( "collision", body->entity->id ) ) {
-                body->entity->box().movePosition( body->velocity * deltaTime );
+        if ( !body->entityId.empty() ) {
+            GetProperty<fpVec2>( "position", body->entityId ) += body->velocity * deltaTime;
+            if ( Properties().has( "collision", body->entityId ) ) {
+                GetProperty<collision>( "collision", body->entityId ).movePosition( body->velocity * deltaTime );
             }
         }
 

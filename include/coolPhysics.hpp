@@ -2,9 +2,7 @@
 #define COOL_PHYSICS
 
 #include "coolMath.hpp"
-// Forward declare Entity to avoid circular dependency
-struct Entity;
-
+#include <string>
 #include <vector>
 #include <mutex>
 
@@ -32,7 +30,7 @@ struct collision {
     Able to set mass and add force to dynamic entities
 */
 struct Dynamic {
-    Entity* entity = nullptr;  // Use pointer to avoid circular dependency
+    std::string entityId;
     fpVec2 velocity;
     fpVec2 acceleration;
     fpVec2 force;
