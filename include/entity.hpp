@@ -9,8 +9,6 @@
 #include <string>
 
 struct Entity {
-    Sprite* sprite = nullptr;
-    bool spriteLoaded = false;
     SDL_FRect defaultRectangle;
 
     collision& box() { return GetProperty<collision>( "collision", id ); }
@@ -62,8 +60,9 @@ struct Entity {
             h = size.y.toFloat();
         }
 
-        if ( sprite != nullptr && spriteLoaded ) {
-            sprite->draw( renderer, drawX, drawY );
+        if ( Properties().has( "sprite", id ) ) {
+            SpriteData& s = GetProperty< SpriteData >( "sprite", id );
+            drawSprite( id, renderer, drawX - ( s.frameWidth / 2.0f ), drawY - ( s.frameHeight / 2.0f ) );
         } else {
             defaultRectangle = SDL_FRect{ drawX - ( w / 2.0f ), drawY - ( h / 2.0f ), w, h };
 

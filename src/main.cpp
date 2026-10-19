@@ -230,6 +230,10 @@ int main ( int argc, char *argv[] ) {
         player.setRectangleHeightAndWidth( fp( int64_t( PLAYER_SIZE ) ), fp( int64_t( PLAYER_SIZE ) ) );
         player.setColor( 255, 165, 0, 255 );
 
+        if ( !loadSprite( player.id, "test_sheet.png", renderer, 4, 40, 40, 200 ) ) {
+            SDL_Log( "Could not load the test sprite" );
+        }
+
         SetProperty( PROP_MOVEABLE, player.id, MoveHandler( [ & ]( const std::string& id ) {
             moveWithKeyboard( id, inputSystem, fp( timeline.getDeltaTime() ) );
         } ) );
@@ -297,6 +301,8 @@ int main ( int argc, char *argv[] ) {
             for ( const std::string& id : Properties().objectsWith( PROP_MOVEABLE ) ) {
                 GetProperty< MoveHandler >( PROP_MOVEABLE, id )( id );
             }
+
+            updateSprites();
 
             // Send frame
             shared.setPosition( player.position() );
@@ -447,6 +453,7 @@ int main ( int argc, char *argv[] ) {
 
     }
 
+    unloadSprites();
     SDL_DestroyRenderer( renderer );
     SDL_DestroyWindow( window );
     SDL_Quit();

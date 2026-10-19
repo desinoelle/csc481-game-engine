@@ -1,89 +1,85 @@
 #include "sprite.hpp"
+#include "sillyPropertyTypes.hpp"
+#include <map>
 #include <iostream>
 
 using namespace std;
+static std::map< std::string, SDL_Texture* > textureCache;
 
-Sprite::Sprite() {}
-
-Sprite::~Sprite() {
-    deloadSprite();
-}
-
-bool Sprite::loadSprite(
-    std::string file,
+bool loadSprite(
+    const std::string& id,
+    const std::string& file,
     SDL_Renderer* renderer,
     int frameCount,
     int frameWidth,
     int frameHeight,
     Uint32 animationDelay
 ) {
-    // Clean up any existing texture
-    if (state.Texture != nullptr) {
-        SDL_DestroyTexture(state.Texture);
-        state.Texture = nullptr;
+    // Load texture only if we haven't loaded this file before
+    if ( textureCache.count( file ) == 0 ) {
+        SDL_Texture* tex = IMG_LoadTexture( renderer, file.c_str() );
+        if ( tex == nullptr ) {
+            cerr << "Failed to load texture '" << file << "': " << SDL_GetError() << endl;
+            return false;
+        }
+        textureCache[ file ] = tex;
     }
 
-    // Load the texture from file
-    state.Texture = IMG_LoadTexture(renderer, file.c_str());
-    
-    if (state.Texture == nullptr) {
-        cerr << "Failed to load texture '" << file << "': " << SDL_GetError() << endl;
-        return false;
-    }
+    SpriteData data;
+    data.texture = textureCache[ file ];
+    data.frameCount = frameCount;
+    data.frameWidth = frameWidth;
+    data.frameHeight = frameHeight;
+    data.animationDelay = animationDelay;
+    data.currentFrame = 0;
+    data.lastFrameTime = SDL_GetTicks();
 
-    // Store animation parameters
-    this->frameCount = frameCount;
-    this->frameWidth = frameWidth;
-    this->frameHeight = frameHeight;
-    this->animationDelay = animationDelay;
-
-    // Set up rectangles for rendering
-    srcRect.w = frameWidth;
-    srcRect.h = frameHeight;
-
-    dstRect.w = frameWidth;
-    dstRect.h = frameHeight;
-
-    // Reset animation
-    state.currentFrame = 0;
-    state.lastFrameTime = SDL_GetTicks();
-
+    SetProperty( "sprite", id, data );
     return true;
 }
 
-void Sprite::update() {
-    if (state.Texture == nullptr) return;
+void updateSprites() {
+    for ( const std::string& id : Properties().objectsWith( "sprite" ) ) {
+        SpriteData& s = GetProperty< SpriteData >( "sprite", id );
 
-    // Get current time in milliseconds
-    Uint32 currentTime = SDL_GetTicks();
-    
-    // If enough time has passed, advance to next frame
-    if (currentTime - state.lastFrameTime >= animationDelay) {
-        state.currentFrame = (state.currentFrame + 1) % frameCount;
-        state.lastFrameTime = currentTime;
+        if ( s.texture == nullptr ) continue;
+
+        Uint32 currentTime = SDL_GetTicks();
+
+        if ( currentTime - s.lastFrameTime >= s.animationDelay ) {
+            s.currentFrame = ( s.currentFrame + 1 ) % s.frameCount;
+            s.lastFrameTime = currentTime;
+        }
     }
 }
 
-void Sprite::draw(SDL_Renderer* renderer, float x, float y) {
-    if (state.Texture == nullptr) return;
+void drawSprite(const std::string& id, SDL_Renderer* renderer, float x, float y) {
+    if ( !Properties().has( "sprite", id ) ) return;
+    SpriteData& s = GetProperty< SpriteData >( "sprite", id );
+    if (s.texture == nullptr) return;
+
+    SDL_FRect srcRect, dstRect;
 
     // Calculate which frame in the spritesheet to draw
-    srcRect.x = state.currentFrame * frameWidth;
+    srcRect.x = s.currentFrame * s.frameWidth;
     srcRect.y = 0.0f;
 
     // Set destination position
     dstRect.x = x;
     dstRect.y = y;
 
+    srcRect.w = s.frameWidth;
+    srcRect.h = s.frameHeight;
+    dstRect.w = s.frameWidth;
+    dstRect.h = s.frameHeight;
+
     // Draw the sprite
-    SDL_RenderTexture(renderer, state.Texture, &srcRect, &dstRect);
+    SDL_RenderTexture(renderer, s.texture, &srcRect, &dstRect);
 }
 
-bool Sprite::deloadSprite() {
-    if (state.Texture != nullptr) {
-        SDL_DestroyTexture(state.Texture);
-        state.Texture = nullptr;
-        return true;
+void unloadSprites() {
+    for ( auto& entry : textureCache ) {
+        SDL_DestroyTexture( entry.second );
     }
-    return false;
+    textureCache.clear();
 }

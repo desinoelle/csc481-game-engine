@@ -14,7 +14,18 @@
 const std::string PROP_POSITION = "position";     
 const std::string PROP_NET_ID = "netId";          
 const std::string PROP_LAST_SEEN = "lastSeen";    
-const std::string PROP_MOVEABLE = "moveable";     
+const std::string PROP_MOVEABLE = "moveable";
+const std::string PROP_SPRITE = "sprite";     
+
+struct SpriteData {
+    SDL_Texture* texture = nullptr;
+    int frameCount = 0;
+    int frameWidth = 0;
+    int frameHeight = 0;
+    Uint32 animationDelay = 0;
+    int currentFrame = 0;
+    Uint32 lastFrameTime = 0;
+};
 
 using PropertyValue = std::variant<
     int,
@@ -26,7 +37,8 @@ using PropertyValue = std::variant<
     SDL_FRect,
     SDL_Color,
     std::function<void(const std::string&)>,
-    std::string
+    std::string,
+    SpriteData
 >;
 
 /* PropertyManager
