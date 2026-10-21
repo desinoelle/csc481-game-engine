@@ -11,8 +11,6 @@
  */
 struct SharedData {
     // Game objects (pointers to be updated by threads)
-    Dynamic* player = nullptr;
-    Dynamic* enemy = nullptr;
     Physics* physics = nullptr;
     Timeline* timeline = nullptr;
     InputSystem* inputSystem = nullptr;

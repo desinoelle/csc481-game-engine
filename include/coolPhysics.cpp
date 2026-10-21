@@ -90,34 +90,51 @@ const std::vector<std::string>& Physics::getBodies() const {
 }
 
 /**
-    Updates all nonstatic entities that have the physics property:
-    acceleration, velocity, and position (and their collision box if they have one).
-    Also applies gravity to all of them.
+    Integrates ONE entity that has the physics property: acceleration, velocity, and
+    position (and its collision box if it has one). Applies gravity too.
+*/
+void Physics::integrate( const std::string& id, fp deltaTime ) {
+    if ( !Properties().has( PROP_PHYSICS, id ) ) {
+        return;
+    }
+    PhysicsData& body = GetProperty<PhysicsData>( PROP_PHYSICS, id );
+
+    if ( body.isStatic ) {
+        return;
+    }
+
+    body.acceleration = ( body.force * body.inverseMass ) + body.gravity;
+    body.velocity += body.acceleration * deltaTime;
+
+    // Only move things that actually have a position
+    if ( Properties().has( PROP_POSITION, id ) ) {
+        GetProperty<fpVec2>( PROP_POSITION, id ) += body.velocity * deltaTime;
+        if ( Properties().has( "collision", id ) ) {
+            GetProperty<collision>( "collision", id ).movePosition( body.velocity * deltaTime );
+        }
+    }
+
+    body.velocity *= body.friction;
+
+    body.force = fpVec2{ 0.0f, 0.0f };
+}
+
+/**
+    Updates all nonstatic entities that have the physics property.
 */
 void Physics::step( fp deltaTime ) {
     std::lock_guard<std::mutex> lock(bodiesMutex);
 
     for ( const std::string& id : Properties().objectsWith( PROP_PHYSICS ) ) {
-        PhysicsData& body = GetProperty<PhysicsData>( PROP_PHYSICS, id );
-
-        if ( body.isStatic ) {
-            continue;
-        }
-
-        body.acceleration = ( body.force * body.inverseMass ) + body.gravity;
-        body.velocity += body.acceleration * deltaTime;
-
-        // Only move things that actually have a position
-        if ( Properties().has( PROP_POSITION, id ) ) {
-            GetProperty<fpVec2>( PROP_POSITION, id ) += body.velocity * deltaTime;
-            if ( Properties().has( "collision", id ) ) {
-                GetProperty<collision>( "collision", id ).movePosition( body.velocity * deltaTime );
-            }
-        }
-
-        body.velocity *= body.friction;
-
-        body.force = fpVec2{ 0.0f, 0.0f };
+        integrate( id, deltaTime );
     }
 }
 
+/**
+    Updates just one entity (by id). Each actor can own its own Physics object, so two
+    actors can be stepped on two threads without locking each other.
+*/
+void Physics::stepBody( const std::string& id, fp deltaTime ) {
+    std::lock_guard<std::mutex> lock(bodiesMutex);
+    integrate( id, deltaTime );
+}

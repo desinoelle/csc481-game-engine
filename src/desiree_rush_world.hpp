@@ -3,7 +3,7 @@
 /**
     Coin Rush - the game simulation.
 
-    Built only from engine pieces: fp / fpVec2 fixed-point math, Physics + Dynamic bodies,
+    Built only from engine pieces: fp / fpVec2 fixed-point math, Physics + PhysicsData bodies,
     Entity + collision boxes. There are no SDL calls in here except key names and drawing,
     so the same code runs in both launch modes:
 
@@ -62,12 +62,11 @@ inline fp fpi( int value ) {
 }
 
 /**
-    One player: an Entity (position + collision box), a Dynamic body, and its own Physics.
+    One player: an Entity (position + collision box + physics property), and its own Physics.
     One Physics per actor so two actors can be stepped on two threads without sharing anything.
 */
 struct Actor {
     Entity entity;
-    Dynamic body;
     Physics physics;
     fpVec2 spawn;
     PadInput input;
@@ -76,12 +75,16 @@ struct Actor {
     int score = 0;
 
     Actor() {
-        body.setMass( fp( 1.0f ) );
-        body.setGravity( fpVec2( fp( 0.0f ), fp( 1500.0f ) ) );
-        body.setFriction( fpVec2( fp( 1.0f ), fp( 1.0f ) ) );
-        body.entityId = entity.id;
-        physics.addBody( &body );
+        PhysicsData data;
+        data.setMass( fp( 1.0f ) );
+        data.setGravity( fpVec2( fp( 0.0f ), fp( 1500.0f ) ) );
+        data.setFriction( fpVec2( fp( 1.0f ), fp( 1.0f ) ) );
+        SetProperty( PROP_PHYSICS, entity.id, data );
     }
+
+    // this actor's physics data (velocity, force, ...) lives in the property table
+    PhysicsData& body() { return GetProperty< PhysicsData >( PROP_PHYSICS, entity.id ); }
+    const PhysicsData& body() const { return GetProperty< PhysicsData >( PROP_PHYSICS, entity.id ); }
 };
 
 class Sim {
@@ -189,15 +192,15 @@ class Sim {
             if ( a.input.right ) {
                 vx = vx + moveSpeed_;
             }
-            a.body.velocity.x = vx;
+            a.body().velocity.x = vx;
 
             if ( a.input.jump && a.onGround ) {
-                a.body.velocity.y = jumpSpeed_;
+                a.body().velocity.y = jumpSpeed_;
             }
 
             fp prevBottom = a.entity.position().y + fpi( PLAYER_HALF );
 
-            a.physics.step( dt_ );
+            a.physics.stepBody( a.entity.id, dt_ );
 
             fp minX = fpi( PLAYER_HALF );
             fp maxX = fpi( WORLD_W - PLAYER_HALF );
@@ -213,7 +216,7 @@ class Sim {
             // land on a platform if we are falling and our feet were above its top last tick
             a.onGround = false;
             a.onMover = false;
-            if ( a.body.velocity.y >= fp( 0.0f ) ) {
+            if ( a.body().velocity.y >= fp( 0.0f ) ) {
                 for ( int s = 0; s < STATIC_COUNT; s++ ) {
                     tryLand( a, statics_[ s ], STATIC_SOLIDS[ s ].hh, prevBottom, false );
                 }
@@ -313,8 +316,8 @@ class Sim {
                 const Actor& a = actors_[ i ];
                 mix( a.entity.position().x.toDouble() );
                 mix( a.entity.position().y.toDouble() );
-                mix( a.body.velocity.x.toDouble() );
-                mix( a.body.velocity.y.toDouble() );
+                mix( a.body().velocity.x.toDouble() );
+                mix( a.body().velocity.y.toDouble() );
                 mix( static_cast< double >( a.score ) );
             }
             mix( mover_.position().x.toDouble() );
@@ -373,8 +376,8 @@ class Sim {
         void respawn( int i ) {
             Actor& a = actors_[ i ];
             a.entity.position() = a.spawn;
-            a.body.velocity = fpVec2();
-            a.body.force = fpVec2();
+            a.body().velocity = fpVec2();
+            a.body().force = fpVec2();
             a.onGround = false;
             a.onMover = false;
             refreshActorBox( a );
@@ -387,7 +390,7 @@ class Sim {
             fp top = solid.position().y - fpi( solidHalfHeight );
             if ( prevBottom <= top && a.entity.box().checkOverlap( &solid.box() ) ) {
                 a.entity.position().y = top - fpi( PLAYER_HALF );
-                a.body.velocity.y = fp( 0.0f );
+                a.body().velocity.y = fp( 0.0f );
                 refreshActorBox( a );
                 a.onGround = true;
                 a.onMover = isMover;

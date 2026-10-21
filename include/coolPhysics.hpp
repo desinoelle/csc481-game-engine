@@ -67,10 +67,16 @@ class Physics {
     private:
         std::mutex bodiesMutex;
 
+        // The per-entity integration, no locking
+        void integrate( const std::string& id, fp deltaTime );
+
     public:
         Physics();
 
         void step( fp deltaTime );
+
+        // Step ONE entity by id (used by games that step actors on separate threads)
+        void stepBody( const std::string& id, fp deltaTime );
 
         // Thread-safe lock for callers that touch physics data from other threads
         std::lock_guard<std::mutex> getBodiesMutexLock() {
