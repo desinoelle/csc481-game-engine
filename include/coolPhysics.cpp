@@ -37,30 +37,44 @@ void collision::movePosition( const fpVec2 p ) {
 
 
 /**
-    Sets mass for dynamic objects
+    Sets mass for physics data
     also precomputes inverse mass for acceleration
 */
-void Dynamic::setMass( fp m ) {
+void PhysicsData::setMass( fp m ) {
     mass = m;
     inverseMass = (m > fp( 0.0f ) ) ? fp( 1.0f ) / m : fp( 0.0f );
 }
 
 /**
-    Adds force to dynamic objects and ignores static objects
+    Adds force to physics data and ignores static objects
 */
-void Dynamic::addForce( const fpVec2& f ) {
+void PhysicsData::addForce( const fpVec2& f ) {
     if ( !isStatic ) {
         force += f;
     }
 }
 
 /**
-    Adds velocity to dynamic objects and ignors static objects
+    Adds velocity to physics data and ignors static objects
 */
-void Dynamic::addVelocity( const fpVec2& v ) {
+void PhysicsData::addVelocity( const fpVec2& v ) {
     if ( !isStatic ) {
         velocity += v;
     }
+}
+
+/**
+    Sets physics gravity
+*/
+void PhysicsData::setGravity( const fpVec2& g ) {
+    gravity = g;
+}
+
+/**
+    Sets physics friction
+*/
+void PhysicsData::setFriction( const fpVec2& f ) {
+    friction = f;
 }
 
 /**
@@ -69,53 +83,41 @@ void Dynamic::addVelocity( const fpVec2& v ) {
 Physics::Physics() {}
 
 /**
-    Adds body to physics list of physics objects
+    Ids of every entity that has the physics property
 */
-void Physics::addBody( Dynamic* body ) {
-    bodies.push_back( body );
+const std::vector<std::string>& Physics::getBodies() const {
+    return Properties().objectsWith( PROP_PHYSICS );
 }
 
 /**
-    Sets phyiscs gravity
-*/
-void Dynamic::setGravity( const fpVec2& g ) {
-    gravity = g;
-}
-
-/**
-    Sets physics friction
-*/
-void Dynamic::setFriction( const fpVec2& f ) {
-    friction = f;
-}
-
-/**
-    Updates all nonstatic phyiscs objects accelration, velocity, and position
-    Also applies gravity to all physics objects
+    Updates all nonstatic entities that have the physics property:
+    acceleration, velocity, and position (and their collision box if they have one).
+    Also applies gravity to all of them.
 */
 void Physics::step( fp deltaTime ) {
     std::lock_guard<std::mutex> lock(bodiesMutex);
-    
-    for ( auto* body: bodies ) {
-        if ( body->isStatic ) {
+
+    for ( const std::string& id : Properties().objectsWith( PROP_PHYSICS ) ) {
+        PhysicsData& body = GetProperty<PhysicsData>( PROP_PHYSICS, id );
+
+        if ( body.isStatic ) {
             continue;
         }
 
-        body->acceleration = ( body->force * body->inverseMass ) + body->gravity;
-        //printf("%lf \n", body->acceleration);
-        body->velocity += body->acceleration * deltaTime;
+        body.acceleration = ( body.force * body.inverseMass ) + body.gravity;
+        body.velocity += body.acceleration * deltaTime;
 
-        // Only update position if entity exists
-        if ( !body->entityId.empty() ) {
-            GetProperty<fpVec2>( "position", body->entityId ) += body->velocity * deltaTime;
-            if ( Properties().has( "collision", body->entityId ) ) {
-                GetProperty<collision>( "collision", body->entityId ).movePosition( body->velocity * deltaTime );
+        // Only move things that actually have a position
+        if ( Properties().has( PROP_POSITION, id ) ) {
+            GetProperty<fpVec2>( PROP_POSITION, id ) += body.velocity * deltaTime;
+            if ( Properties().has( "collision", id ) ) {
+                GetProperty<collision>( "collision", id ).movePosition( body.velocity * deltaTime );
             }
         }
 
-        body->velocity *= body->friction;
+        body.velocity *= body.friction;
 
-        body->force = fpVec2{ 0.0f, 0.0f };
+        body.force = fpVec2{ 0.0f, 0.0f };
     }
 }
 
