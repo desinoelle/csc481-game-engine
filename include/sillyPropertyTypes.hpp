@@ -38,7 +38,8 @@ using PropertyValue = std::variant<
     SDL_Color,
     std::function<void(const std::string&)>,
     std::string,
-    SpriteData
+    SpriteData,
+    PhysicsData
 >;
 
 /* PropertyManager
