@@ -114,7 +114,7 @@ void Physics::integrate( const std::string& id, fp deltaTime ) {
         }
     }
 
-    body.velocity *= body.friction;
+    body.velocity *= body.friction * deltaTime;
 
     body.force = fpVec2{ 0.0f, 0.0f };
 }
