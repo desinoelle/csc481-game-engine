@@ -18,6 +18,7 @@ float Timeline::update() {
         return 0.0f;
     } else {
         lastDelta = delta * (float)timeScale;
+        timestamp += lastDelta;
         return lastDelta;
     }
 };

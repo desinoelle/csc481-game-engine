@@ -9,6 +9,7 @@ protected:
     double timeScale = 1.0;
     Uint64 lastTicks = 0;
     float lastDelta = 0.0f;
+    float timestamp = 0.0f;
 
     const double MAX_SPEED = 2.0;
     const double MIN_SPEED = 0.5;
@@ -29,6 +30,8 @@ public:
     bool isPaused() const {return paused;};
 
     float getDeltaTime() const { return lastDelta; };
+
+    float getTime() const { return timestamp; };
 };
 
 #endif
