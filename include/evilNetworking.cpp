@@ -1,4 +1,5 @@
 #include "evilNetworking.hpp"
+#include "eventSerialization.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -23,6 +24,7 @@ NetworkClient::NetworkClient( int clientId ):
         subscribeSocket.set( zmq::sockopt::linger, 0 );
         subscribeSocket.connect( "tcp://localhost:" + std::to_string( PUB_PORT ) );
         subscribeSocket.set( zmq::sockopt::subscribe, "STATE" );
+        subscribeSocket.set( zmq::sockopt::subscribe, "EVENT" );
 }
 
 /**
@@ -53,6 +55,7 @@ bool NetworkClient::connectToServer( const std::string& host ) {
         subscribeSocket.set( zmq::sockopt::linger, 0 );
         subscribeSocket.connect( "tcp://" + host + ":" + std::to_string( PUB_PORT ) );
         subscribeSocket.set( zmq::sockopt::subscribe, "STATE" );
+        subscribeSocket.set( zmq::sockopt::subscribe, "EVENT" );
     }
 
     std::string join = "JOIN";
@@ -117,7 +120,32 @@ void NetworkClient::sendPosition( const fpVec2& position ) {
 }
 
 /**
-    Reads every state message waiting in the queue and keeps only the newest
+    Reads every message waiting on the subscribe socket and sorts it
+        STATE   only the newest is kept
+        EVENT   every one is kept, in the order they arrived
+*/
+void NetworkClient::drainSubscription() {
+    zmq::message_t message;
+    while ( subscribeSocket.recv( message, zmq::recv_flags::dontwait ) ) {
+        std::string text( static_cast< char* >( message.data() ), message.size() );
+
+        if ( text.compare( 0, 5, "STATE" ) == 0 ) {
+            latestState = text;
+        }
+        else if ( text.compare( 0, 5, "EVENT" ) == 0 ) {
+            Event event;
+            if ( parseEvent( text, event ) ) {
+                pendingEvents.push_back( event );
+            }
+            else {
+                std::cerr << "Ignoring a malformed event: " << text << std::endl;
+            }
+        }
+    }
+}
+
+/**
+    Reads the newest state message waiting in the queue
     Access information about others 
 */
 void NetworkClient::pollState() {
@@ -125,11 +153,10 @@ void NetworkClient::pollState() {
         return;
     }
 
+    drainSubscription();
+
     std::string latest;
-    zmq::message_t message;
-    while ( subscribeSocket.recv( message, zmq::recv_flags::dontwait ) ) {
-        latest.assign( static_cast< char* >( message.data() ), message.size() );
-    }
+    latest.swap( latestState );
 
     if ( latest.empty() ) {
         return;
@@ -154,6 +181,43 @@ void NetworkClient::pollState() {
         }
         players[ player.id ] = player;
     }
+}
+
+/**
+    Sends an event to the server, which decides what it means
+*/
+bool NetworkClient::sendEvent( const Event& event ) {
+    if ( !connected ) {
+        return false;
+    }
+
+    std::string message = serializeEvent( event );
+    requestSocket.send( zmq::message_t( message.begin(), message.end() ), zmq::send_flags::none );
+
+    zmq::message_t reply;
+    if ( !requestSocket.recv( reply, zmq::recv_flags::none ) ) {
+        std::cerr << "Lost contact with the server" << std::endl;
+        connected = false;
+        return false;
+    }
+
+    std::string replyText( static_cast< char* >( reply.data() ), reply.size() );
+    return replyText == "OK";
+}
+
+/**
+    Hands over the events received so far and forgets them
+*/
+std::vector< Event > NetworkClient::pollEvents() {
+    if ( !connected ) {
+        return {};
+    }
+
+    drainSubscription();
+
+    std::vector< Event > events;
+    events.swap( pendingEvents );
+    return events;
 }
 
 /**

@@ -38,6 +38,7 @@ add_executable(coolServer
     src/server_main.cpp
     include/coolMath.cpp
     include/evilNetworking.cpp
+    include/eventSerialization.cpp
 )
 
 target_include_directories(coolServer PRIVATE include)
@@ -58,6 +59,7 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/src/monica_main.cpp)
         include/niceJobSystem.cpp
         include/saucyPeerToPeer.cpp
         include/eventManager.cpp
+        include/eventSerialization.cpp
     )
 
     target_include_directories(monicaGame PRIVATE include)
@@ -91,7 +93,8 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/src/desiree_rush_server.cpp)
         src/desiree_rush_server.cpp
         include/coolMath.cpp
         include/evilNetworking.cpp
+        include/eventSerialization.cpp
     )
     target_include_directories(rushServer PRIVATE include)
-    target_link_libraries(rushServer PRIVATE cppzmq Threads::Threads)
+    target_link_libraries(rushServer PRIVATE SDL3::SDL3 cppzmq Threads::Threads)
 endif()
