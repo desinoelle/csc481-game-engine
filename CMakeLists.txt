@@ -27,6 +27,7 @@ add_executable(coolEngine
     include/niceJobSystem.cpp
     include/saucyPeerToPeer.cpp
     include/eventManager.cpp
+    include/eventSerialization.cpp
 )
 
 target_include_directories(coolEngine PRIVATE include)
@@ -79,6 +80,7 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/src/desiree_rush_main.cpp)
         include/niceJobSystem.cpp
         include/saucyPeerToPeer.cpp
         include/eventManager.cpp
+        include/eventSerialization.cpp
     )
     target_include_directories(rushGame PRIVATE include)
     target_link_libraries(rushGame PRIVATE SDL3::SDL3 SDL3_image::SDL3_image cppzmq Threads::Threads)
