@@ -12,6 +12,8 @@ const int REQ_PORT = 5555;
 const int PUB_PORT = 5556;
 const int CLIENT_PORT_BASE = 6000;    // per client server threads
 
+const std::string EVENT_ARG_SENDER = "sender";
+
 /**
     Messages passed between the client and the server
         client to lobby         "JOIN"

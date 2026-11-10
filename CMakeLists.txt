@@ -28,7 +28,28 @@ add_executable(coolEngine
     include/saucyPeerToPeer.cpp
     include/eventManager.cpp
     include/eventSerialization.cpp
+    include/replaySystem.cpp
 )
+
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/src/amelia_main.cpp)
+    add_executable(ameliaGame
+        src/amelia_main.cpp
+        include/input.cpp
+        include/entity.cpp
+        include/coolMath.cpp
+        include/coolPhysics.cpp
+        include/sprite.cpp
+        include/evilNetworking.cpp
+        include/timeMagic.cpp
+        include/niceJobSystem.cpp
+        include/saucyPeerToPeer.cpp
+        include/eventManager.cpp
+        include/eventSerialization.cpp
+        include/replaySystem.cpp
+    )
+    target_include_directories(ameliaGame PRIVATE include)
+    target_link_libraries(ameliaGame PRIVATE SDL3::SDL3 SDL3_image::SDL3_image cppzmq Threads::Threads)
+endif()
 
 target_include_directories(coolEngine PRIVATE include)
 

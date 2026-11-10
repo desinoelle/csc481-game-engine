@@ -13,7 +13,12 @@ enum class EventType {
     Collision,
     Death,
     Spawn,
-    Input
+    Input,
+    Moved,
+    ReplayStartRecording,
+    ReplayStopRecording,
+    ReplayStartPlayback,
+    ReplayStopPlayback
 };
 
 /**

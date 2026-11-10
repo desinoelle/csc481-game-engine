@@ -10,6 +10,7 @@
 */
 
 #include "evilNetworking.hpp"
+#include "eventSerialization.hpp"
 #include "sillyPropertyTypes.hpp"
 
 #include <SDL3/SDL.h>
@@ -23,6 +24,9 @@
 
 std::mutex propertiesLock;
 int nextId = 1;
+
+std::mutex eventOutboxLock;
+std::vector< std::string > eventOutbox;
 
 const int CLOCK_ID = 0;
 const int PLAYER_TIMEOUT_MS = 2000;
@@ -130,6 +134,29 @@ std::string buildStateMessage() {
     return out.str();
 }
 
+bool relayEvent( const std::string& text, int senderId ) {
+    Event event;
+    if ( !parseEvent( text, event ) ) {
+        return false;
+    }
+    event.args[ EVENT_ARG_SENDER ] = senderId;
+
+    if ( event.type != EventType::Input ) {
+        std::cout << "[server] " << eventTypeName( event.type ) << " event from player " << senderId << std::endl;
+    }
+
+    std::lock_guard< std::mutex > lock( eventOutboxLock );
+    eventOutbox.push_back( serializeEvent( event ) );
+    return true;
+}
+
+std::vector< std::string > takeQueuedEvents() {
+    std::lock_guard< std::mutex > lock( eventOutboxLock );
+    std::vector< std::string > events;
+    events.swap( eventOutbox );
+    return events;
+}
+
 /**
     Per-client thread
     MOVE <id> <x> <y>   
@@ -154,7 +181,8 @@ void clientThread( zmq::context_t& context, int id, int port ) {
                 continue;
             }
 
-            std::istringstream in( toText( request ) );
+            std::string text = toText( request );
+            std::istringstream in( text );
             std::string command;
             in >> command;
 
@@ -166,6 +194,10 @@ void clientThread( zmq::context_t& context, int id, int port ) {
 
                 bool moved = !in.fail() && moveId == id && movePlayer( key, x, y );
                 sendText( socket, moved ? "OK" : "ERR" );
+            }
+            else if ( command == "EVENT" ) {
+                bool relayed = playerExists( key ) && relayEvent( text, id );
+                sendText( socket, relayed ? "OK" : "ERR" );
             }
             else if ( command == "LEAVE" ) {
                 removePlayer( key );
@@ -225,6 +257,10 @@ void publishThread(zmq::context_t& context) {
     while (true) {
         removeTimedOutPlayers();
         sendText( socket, buildStateMessage() );
+
+        for ( const std::string& event : takeQueuedEvents() ) {
+            sendText( socket, event );
+        }
 
         // Broadcast at ~60 Hz (16 ms per frame)
         SDL_Delay( 16 );   

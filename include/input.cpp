@@ -16,7 +16,7 @@ void InputSystem::update( double now ) {
 
     for ( const auto& [ scancode, action ] : keyBindings ) {
         if ( isKeyPressed( scancode ) ) {
-            eventManager.queueEvent( EventType::Input, now, 0, { { "action, action } } );
+            eventManager.queueEvent( EventType::Input, now, 0, { { "action", action } } );
         }
     }
 }

@@ -8,7 +8,9 @@
 namespace {
 
     // Keep this list in step with enum class EventType in eventManager.hpp
-    const char* const EVENT_TYPE_NAMES[] = { "Collision", "Death", "Spawn", "Input" };
+    const char* const EVENT_TYPE_NAMES[] = { "Collision", "Death", "Spawn", "Input", "Moved",
+                                              "ReplayStartRecording", "ReplayStopRecording",
+                                              "ReplayStartPlayback", "ReplayStopPlayback" };
     const int EVENT_TYPE_COUNT = sizeof( EVENT_TYPE_NAMES ) / sizeof( EVENT_TYPE_NAMES[ 0 ] );
 
     /**
