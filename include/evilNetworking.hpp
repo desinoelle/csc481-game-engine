@@ -5,6 +5,7 @@
 #include "eventManager.hpp"
 #include <zmq.hpp>
 #include <map>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -54,6 +55,10 @@ class NetworkClient {
         // Filled by drainSubscription, which sorts what arrives on the subscribe socket
         std::string latestState;
         std::vector< Event > pendingEvents;
+
+        // The sockets are not thread safe, so every public call that uses them takes this lock
+        // A game can then send from the main thread while another thread polls
+        std::mutex socketLock;
 
         void drainSubscription();
 

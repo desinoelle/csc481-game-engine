@@ -14,6 +14,7 @@
 #include <functional>
 #include <map>
 #include <mutex>
+#include <set>
 #include <string>
 #include <thread>
 #include <vector>
@@ -25,6 +26,8 @@
 #include "niceSharedData.hpp"
 #include "niceJobSystem.hpp"
 #include "saucyPeerToPeer.hpp"
+#include "eventManager.hpp"
+#include "networkEvents.hpp"
 
 const int WINDOW_WIDTH = 1920;
 const int WINDOW_HEIGHT = 1080;
@@ -180,6 +183,39 @@ void syncRemotePlayers( std::map< int, Entity >& remotePlayers, const std::map< 
     }
 }
 
+// ---- Event demo for the networked scene ----
+//   SPACE         Input event     raises a Spawn event that drops a marker where the player is
+//   touch marker  Collision event raises a Death event that removes the marker
+// Spawn and Death are shared through the server, so every client sees the same markers
+// Yellow markers are ours and only other clients can collect them, green markers are another client's
+const int MARKER_SIZE = 20;
+const double DROP_COOLDOWN = 0.25;      // seconds of timeline time between drops
+
+std::string markerName( int ownerId, int number ) {
+    return "marker_" + std::to_string( ownerId ) + "_" + std::to_string( number );
+}
+
+// Events can come from other machines, so look arguments up instead of assuming they are there
+const std::string* stringArg( const Event& event, const std::string& key ) {
+    auto it = event.args.find( key );
+    return it == event.args.end() ? nullptr : std::get_if< std::string >( &it->second );
+}
+
+const float* floatArg( const Event& event, const std::string& key ) {
+    auto it = event.args.find( key );
+    return it == event.args.end() ? nullptr : std::get_if< float >( &it->second );
+}
+
+/**
+    Square player and square marker overlap
+*/
+bool touches( Entity& player, Entity& marker ) {
+    double half = ( PLAYER_SIZE + MARKER_SIZE ) / 2.0;
+    double dx = player.position().x.toDouble() - marker.position().x.toDouble();
+    double dy = player.position().y.toDouble() - marker.position().y.toDouble();
+    return std::fabs( dx ) < half && std::fabs( dy ) < half;
+}
+
 int main ( int argc, char *argv[] ) {
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -196,7 +232,8 @@ int main ( int argc, char *argv[] ) {
     }
     SDL_Log("Window created!");
 
-    InputSystem inputSystem;
+    EventManager eventManager;
+    InputSystem inputSystem( eventManager );
     Physics physics;
     Timeline timeline;
     timeline.init();
@@ -240,6 +277,80 @@ int main ( int argc, char *argv[] ) {
 
         std::map< int, Entity > remotePlayers;
 
+        // Events: Spawn and Death are shared with every other client
+        NetworkedEvents sharedEvents( eventManager, networkClient );
+        sharedEvents.share( EventType::Spawn );
+        sharedEvents.share( EventType::Death );
+
+        std::map< std::string, Entity > markers;
+        std::set< std::string > collecting;     // markers already touched, waiting for their Death event
+        std::set< std::string > ownMarkers;     // markers this client dropped
+        int markersDropped = 0;
+        int markersCollected = 0;
+        double lastDrop = -1000.0;
+
+        inputSystem.bindKey( SDL_SCANCODE_SPACE, "drop" );
+
+        // Input -> Spawn
+        eventManager.registerHandler( EventType::Input, [ & ]( const Event& event ) {
+            const std::string* action = stringArg( event, "action" );
+            if ( !action || *action != "drop" || event.timestamp - lastDrop < DROP_COOLDOWN ) {
+                return;
+            }
+            lastDrop = event.timestamp;
+
+            eventManager.queueEvent( EventType::Spawn, event.timestamp, 0, {
+                { "marker", markerName( myId, markersDropped++ ) },
+                { "x", static_cast< float >( player.position().x.toDouble() ) },
+                { "y", static_cast< float >( player.position().y.toDouble() ) } } );
+        } );
+
+        // Spawn: make the marker, whether we or another client raised the event
+        eventManager.registerHandler( EventType::Spawn, [ & ]( const Event& event ) {
+            const std::string* name = stringArg( event, "marker" );
+            const float* x = floatArg( event, "x" );
+            const float* y = floatArg( event, "y" );
+            if ( !name || !x || !y || markers.count( *name ) > 0 ) {
+                return;
+            }
+
+            bool fromOtherClient = event.args.count( EVENT_ARG_SENDER ) > 0;
+            Entity& marker = markers[ *name ];
+            marker.setRectangleHeightAndWidth( fp( int64_t( MARKER_SIZE ) ), fp( int64_t( MARKER_SIZE ) ) );
+            if ( fromOtherClient ) {
+                marker.setColor( 60, 220, 60, 255 );
+            } else {
+                marker.setColor( 255, 230, 0, 255 );
+                ownMarkers.insert( *name );
+            }
+            marker.position() = fpVec2{ double( *x ), double( *y ) };
+        } );
+
+        // Collision -> Death
+        eventManager.registerHandler( EventType::Collision, [ & ]( const Event& event ) {
+            const std::string* name = stringArg( event, "marker" );
+            if ( !name ) {
+                return;
+            }
+            markersCollected++;
+            eventManager.queueEvent( EventType::Death, event.timestamp, 0, { { "marker", *name } } );
+        } );
+
+        // Death: remove the marker
+        eventManager.registerHandler( EventType::Death, [ & ]( const Event& event ) {
+            const std::string* name = stringArg( event, "marker" );
+            if ( !name ) {
+                return;
+            }
+            collecting.erase( *name );
+            ownMarkers.erase( *name );
+            auto it = markers.find( *name );
+            if ( it != markers.end() ) {
+                Properties().removeObject( it->second.id );
+                markers.erase( it );
+            }
+        } );
+
         // Network thread sends and reads, main thread runs
         ClientShared shared;
         shared.setPosition( player.position() );
@@ -263,12 +374,15 @@ int main ( int argc, char *argv[] ) {
                 }
             }
 
+            // Timeline time for this frame, read before the jobs run so they all agree on it
+            double now = timeline.getTime();
+
             // Prepare job queue for this frame
             JobQueue jobQueue;
 
             // Job 1: Update input system
-            jobQueue.push_back([&sharedData]() {
-                    sharedData.inputSystem->update();
+            jobQueue.push_back([&sharedData, now]() {
+                    sharedData.inputSystem->update( now );
                     });
 
             // Job 2: Update timeline
@@ -304,6 +418,17 @@ int main ( int argc, char *argv[] ) {
 
             updateSprites();
 
+            // Events: take in other clients' events, raise our own collisions, then handle everything due
+            sharedEvents.update( now );
+            for ( auto& entry : markers ) {
+                bool collectable = collecting.count( entry.first ) == 0 && ownMarkers.count( entry.first ) == 0;
+                if ( collectable && touches( player, entry.second ) ) {
+                    collecting.insert( entry.first );
+                    eventManager.queueEvent( EventType::Collision, now, 0, { { "marker", entry.first } } );
+                }
+            }
+            eventManager.processEvents( now );
+
             // Send frame
             shared.setPosition( player.position() );
             shared.requestSend();
@@ -323,11 +448,15 @@ int main ( int argc, char *argv[] ) {
             for ( auto& entry : remotePlayers ) {
                 entry.second.draw( renderer );
             }
+            for ( auto& entry : markers ) {
+                entry.second.draw( renderer );
+            }
             player.draw( renderer );
 
-            char hud[ 96 ];
-            std::snprintf( hud, sizeof( hud ), "%s   players %zu   server %.1fs%s", title.c_str(),
-                           remotePlayers.size() + 1, shared.getServerTime(), timeline.isPaused() ? "   PAUSED" : "" );
+            char hud[ 160 ];
+            std::snprintf( hud, sizeof( hud ), "%s   players %zu   server %.1fs%s   markers %zu  collected %d  events sent %d received %d", title.c_str(),
+                           remotePlayers.size() + 1, shared.getServerTime(), timeline.isPaused() ? "   PAUSED" : "",
+                           markers.size(), markersCollected, sharedEvents.sentCount(), sharedEvents.receivedCount() );
             SDL_SetRenderDrawColor( renderer, 255, 255, 255, 255 );
             SDL_RenderDebugText( renderer, 10.0f, 10.0f, hud );
 
@@ -392,7 +521,7 @@ int main ( int argc, char *argv[] ) {
                     running = false;
                 }
             }
-            inputSystem.update();
+            inputSystem.update( timeline.getTime() );
 
             if ( !waitingForPeer ) {
                 localKeys.copyFrom( inputSystem );

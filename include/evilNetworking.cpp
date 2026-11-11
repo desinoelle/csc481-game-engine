@@ -101,6 +101,7 @@ bool NetworkClient::connectToServer( const std::string& host ) {
     Sends where this client's character is
 */
 void NetworkClient::sendPosition( const fpVec2& position ) {
+    std::lock_guard< std::mutex > guard( socketLock );
     if ( !connected ) {
         return;
     }
@@ -149,6 +150,7 @@ void NetworkClient::drainSubscription() {
     Access information about others 
 */
 void NetworkClient::pollState() {
+    std::lock_guard< std::mutex > guard( socketLock );
     if ( !connected ) {
         return;
     }
@@ -187,6 +189,7 @@ void NetworkClient::pollState() {
     Sends an event to the server, which decides what it means
 */
 bool NetworkClient::sendEvent( const Event& event ) {
+    std::lock_guard< std::mutex > guard( socketLock );
     if ( !connected ) {
         return false;
     }
@@ -209,6 +212,7 @@ bool NetworkClient::sendEvent( const Event& event ) {
     Hands over the events received so far and forgets them
 */
 std::vector< Event > NetworkClient::pollEvents() {
+    std::lock_guard< std::mutex > guard( socketLock );
     if ( !connected ) {
         return {};
     }
@@ -224,6 +228,7 @@ std::vector< Event > NetworkClient::pollEvents() {
     Tells the server this client is leaving
 */
 void NetworkClient::disconnect() {
+    std::lock_guard< std::mutex > guard( socketLock );
     if ( !connected ) {
         return;
     }

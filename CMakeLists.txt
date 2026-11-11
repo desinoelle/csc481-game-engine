@@ -28,6 +28,7 @@ add_executable(coolEngine
     include/saucyPeerToPeer.cpp
     include/eventManager.cpp
     include/eventSerialization.cpp
+    include/networkEvents.cpp
     include/replaySystem.cpp
 )
 
@@ -104,6 +105,7 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/src/desiree_rush_main.cpp)
         include/saucyPeerToPeer.cpp
         include/eventManager.cpp
         include/eventSerialization.cpp
+        include/networkEvents.cpp
     )
     target_include_directories(rushGame PRIVATE include)
     target_link_libraries(rushGame PRIVATE SDL3::SDL3 SDL3_image::SDL3_image cppzmq Threads::Threads)
